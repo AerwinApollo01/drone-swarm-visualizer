@@ -760,10 +760,108 @@
     /* ============================================================
        GLOSSARY LAYOUT
     ============================================================ */
-    #pane-gloss .gloss-grid {
+    .gloss-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 12px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ============================================================
+       C-UAS MODULE 1 — KILL CHAIN VISUALIZER
+    ============================================================ */
+    .cuas1-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr 240px;
+      gap: 16px;
+      align-items: start;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 860px) {
+      .cuas1-layout { grid-template-columns: 1fr; }
+    }
+    .cuas1-sidebar, .cuas1-rightbar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+    .cuas1-canvas-wrap {
+      min-width: 0;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+    .cuas1-canvas-wrap canvas {
+      width: 100%; height: auto; display: block; border-radius: 4px;
+    }
+    .layer-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      border-radius: var(--radius);
+      font-size: 11px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .layer-toggle:hover { background: rgba(126,184,247,0.06); }
+    .layer-toggle.off { opacity: 0.35; }
+    .layer-toggle .layer-range {
+      font-size: 10px; color: var(--text-dim); margin-left: 8px;
+    }
+    .kchain-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .kchain-step {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      transition: all 0.18s;
+    }
+    .kchain-step.active {
+      background: rgba(249,212,110,0.15);
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+    .kchain-step.done {
+      background: rgba(110,249,176,0.10);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .outcome-box {
+      padding: 16px;
+      border-radius: var(--radius);
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .outcome-box.defended {
+      background: rgba(110,249,176,0.12);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .outcome-box.impact {
+      background: rgba(249,124,110,0.15);
+      border-color: var(--red);
+      color: var(--red);
     }
     .gloss-card {
       background: var(--bg-panel);
@@ -1002,6 +1100,7 @@
     <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-mod2"     id="tab-m2"   data-target="mod2">Module 2&mdash;Boids</button>
     <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-mod3"     id="tab-m3"   data-target="mod3">Module 3&mdash;Mesh &amp; Gossip</button>
     <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-mod4"     id="tab-m4"   data-target="mod4">Module 4&mdash;Path Planning</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-cuas1"    id="tab-c1"   data-target="cuas1">C-UAS 1&mdash;Kill Chain</button>
     <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-glossary" id="tab-gloss" data-target="glossary">Glossary</button>
   </nav>
 
@@ -1392,6 +1491,98 @@
 </div>
 
 
+<!-- C-UAS MODULE 1 — KILL CHAIN -->
+<div id="tab-cuas1" class="tab-pane">
+
+  <details class="theory-panel">
+    <summary>Core Theory — The Kill Chain</summary>
+    <div class="theory-body">
+      <div class="theory-item">
+        <span class="theory-term">Kill Chain</span>
+        <span class="theory-def">Sequential defensive stages: Detect → Track → Identify → Decide → Engage. Strictly sequential; a single broken link kills the entire defense.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Time as Constraint</span>
+        <span class="theory-def">Detection range × drone speed determines engagement window. Subtract human decision latency, comms, weapon spool-up. Drones win by collapsing this window.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Layered Defense</span>
+        <span class="theory-def">Outer (5-10 km) · Middle (1-3 km) · Inner (50-500 m) · Terminal (point). Each layer hands off as target closes. No single sensor or weapon covers all ranges.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Threat Taxonomy</span>
+        <span class="theory-def">Groups 1-5 by weight, altitude, speed. Group 1 (consumer / FPV) is the hardest C-UAS problem — small, numerous, cheap. Most C-UAS effort is Group 1-2.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Cost Asymmetry</span>
+        <span class="theory-def">$2K drone vs $4M interceptor missile. Defender can win every engagement and still go bankrupt. Drives interest in DEW, jamming, and interceptor drones.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Defender's Dilemma</span>
+        <span class="theory-def">Attacker chooses when, where, how many. Defender must be ready everywhere, always, for any combination. Permanent asymmetry — cannot be engineered away.</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="cuas1-layout">
+
+    <div class="cuas1-sidebar">
+      <div class="sidebar-section-title">Defense Layers</div>
+      <div id="c1-layer-0" class="layer-toggle" data-layer="0" style="border-left-color:#7eb8f7;">
+        <span>Outer<span class="layer-range"> · 5 km</span></span><span>ON</span>
+      </div>
+      <div id="c1-layer-1" class="layer-toggle" data-layer="1" style="border-left-color:#6ef9b0;">
+        <span>Middle<span class="layer-range"> · 3 km</span></span><span>ON</span>
+      </div>
+      <div id="c1-layer-2" class="layer-toggle" data-layer="2" style="border-left-color:#f9d46e;">
+        <span>Inner<span class="layer-range"> · 1 km</span></span><span>ON</span>
+      </div>
+      <div id="c1-layer-3" class="layer-toggle" data-layer="3" style="border-left-color:#f97c6e;">
+        <span>Terminal<span class="layer-range"> · 200 m</span></span><span>ON</span>
+      </div>
+
+      <div class="sidebar-section-title">Threat</div>
+      <div class="slider-group">
+        <label class="slider-label">Drone Speed (m/s)<span class="slider-val" id="c1-speed-val">35</span></label>
+        <input type="range" id="c1-speed" min="10" max="120" step="5" value="35">
+      </div>
+
+      <div class="sidebar-section-title">Controls</div>
+      <button id="c1-launch" class="ctrl-btn ctrl-btn--green">Launch Threat</button>
+      <button id="c1-pause" class="ctrl-btn">Pause</button>
+      <button id="c1-reset" class="ctrl-btn">Reset</button>
+    </div>
+
+    <div class="cuas1-canvas-wrap">
+      <canvas id="cuas1-canvas" width="600" height="480"></canvas>
+      <div class="kchain-bar">
+        <div class="kchain-step" id="c1-stage-0">DETECT</div>
+        <div class="kchain-step" id="c1-stage-1">TRACK</div>
+        <div class="kchain-step" id="c1-stage-2">IDENTIFY</div>
+        <div class="kchain-step" id="c1-stage-3">DECIDE</div>
+        <div class="kchain-step" id="c1-stage-4">ENGAGE</div>
+      </div>
+    </div>
+
+    <div class="cuas1-rightbar">
+      <div id="c1-outcome" class="outcome-box">AWAITING THREAT</div>
+      <div class="stats-box">
+        <div class="stats-row"><span>Drone Speed</span><span id="c1-stat-speed">— m/s</span></div>
+        <div class="stats-row"><span>Distance</span><span id="c1-stat-dist">— km</span></div>
+        <div class="stats-row"><span>Time to Impact</span><span id="c1-stat-tti">— s</span></div>
+        <div class="stats-row"><span>Chain Elapsed</span><span id="c1-stat-chain">— s</span></div>
+        <div class="stats-row"><span>Detected By</span><span id="c1-stat-detector">—</span></div>
+        <div class="stats-row"><span>Current Stage</span><span id="c1-stat-stage">—</span></div>
+      </div>
+      <div class="info-bar" style="font-size:10px;">
+        Disable layers to break the kill chain. Push drone speed past 80 m/s to see how FPV / loitering munition speeds collapse the engagement window. A full chain takes ~8 seconds — that's your time budget.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
 <!-- GLOSSARY -->
 <div id="tab-glossary" class="tab-pane">
 
@@ -1639,6 +1830,46 @@
         <span class="gloss-badge gloss-badge--all">ALL</span>
       </div>
       <p class="gloss-def">Behavior that was never explicitly programmed, arising only from local agent interactions.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Kill Chain</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C1</span>
+      </div>
+      <p class="gloss-def">Sequential C-UAS defensive stages: Detect → Track → Identify → Decide → Engage. Strictly sequential — one broken link kills the entire defense.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Layered Defense</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C1</span>
+      </div>
+      <p class="gloss-def">Concentric defensive layers — outer (5-10 km), middle (1-3 km), inner (50-500 m), terminal (point). Each layer compensates for the others' blind spots.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Cost Asymmetry</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C1</span>
+      </div>
+      <p class="gloss-def">When the defensive shot costs orders of magnitude more than the threat (e.g. $4M missile vs $2K drone). Can win every engagement and still lose strategically.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Drone Groups 1-5</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C1</span>
+      </div>
+      <p class="gloss-def">DoD taxonomy by weight, altitude, speed. Group 1 = consumer / FPV (hardest C-UAS problem). Group 5 = strategic platforms (handled by conventional air defense).</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Defender's Dilemma</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C1</span>
+      </div>
+      <p class="gloss-def">Attacker chooses when, where, and how many; defender must be ready everywhere, always, for any combination. Permanent asymmetry, not an engineering problem.</p>
     </div>
 
   </div>
@@ -3542,6 +3773,307 @@ const M4 = (() => {
   return { init };
 })();
 /* ============================================================
+   C-UAS MODULE 1 — KILL CHAIN VISUALIZER
+   ============================================================ */
+const C1 = (() => {
+  const W = 600, H = 480;
+  const CX = W / 2, CY = H / 2;
+
+  // 44 px = 1 km; ranges are real-world km mapped to pixels
+  const LAYERS = [
+    { name: 'Outer',    km: 5, px: 220, color: '#7eb8f7' },
+    { name: 'Middle',   km: 3, px: 132, color: '#6ef9b0' },
+    { name: 'Inner',    km: 1, px:  44, color: '#f9d46e' },
+    { name: 'Terminal', km: 0.2, px: 12, color: '#f97c6e' },
+  ];
+
+  // Kill chain — total ~8 seconds end to end
+  const STAGES = ['DETECT', 'TRACK', 'IDENTIFY', 'DECIDE', 'ENGAGE'];
+  const STAGE_DUR = [1.0, 1.0, 1.5, 2.5, 2.0]; // sum = 8.0s
+
+  // Time scale: 1 second of sim = 1 second wall-clock at 60fps
+  // Drone speed in m/s; 1 px = 1000/44 ≈ 22.7 m
+  const M_PER_PX = 1000 / 44;
+
+  let canvas, ctx, animId = null;
+  let drone = null;
+  let outcome = null;     // null | 'DEFENDED' | 'IMPACT'
+  let timer = 0;          // sim seconds since drone launched
+  let chainStart = null;  // sim time when first detection happened
+  let detectedBy = -1;    // layer index that first detected
+  let layerOn = [true, true, true, true];
+  let speedMps = 35;
+  let paused = false;
+  let lastFrame = 0;
+
+  function reset() {
+    drone = null;
+    outcome = null;
+    timer = 0;
+    chainStart = null;
+    detectedBy = -1;
+    updateUI();
+  }
+
+  function launch() {
+    const angle = Math.random() * Math.PI * 2;
+    const startR = 230; // just inside the canvas edge
+    drone = {
+      x: CX + Math.cos(angle) * startR,
+      y: CY + Math.sin(angle) * startR,
+    };
+    outcome = null;
+    timer = 0;
+    chainStart = null;
+    detectedBy = -1;
+  }
+
+  function stageIndex() {
+    if (chainStart === null) return -1;
+    const elapsed = timer - chainStart;
+    let acc = 0;
+    for (let i = 0; i < STAGE_DUR.length; i++) {
+      acc += STAGE_DUR[i];
+      if (elapsed < acc) return i;
+    }
+    return STAGE_DUR.length; // chain complete
+  }
+
+  function update(dt) {
+    if (!drone || outcome || paused) return;
+    timer += dt;
+
+    // Move drone toward center
+    const dx = CX - drone.x, dy = CY - drone.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 6) { outcome = 'IMPACT'; return; }
+
+    const pxPerSec = speedMps / M_PER_PX;
+    drone.x += (dx / dist) * pxPerSec * dt;
+    drone.y += (dy / dist) * pxPerSec * dt;
+
+    // First detection: outermost enabled layer drone has crossed
+    if (chainStart === null) {
+      for (let i = 0; i < LAYERS.length; i++) {
+        if (!layerOn[i]) continue;
+        if (dist < LAYERS[i].px) {
+          chainStart = timer;
+          detectedBy = i;
+          break;
+        }
+      }
+    }
+
+    // Chain complete?
+    const si = stageIndex();
+    if (si >= STAGES.length) {
+      // Engagement succeeds if drone hasn't impacted yet (check above)
+      // ...and any layer is still in range to actually engage
+      outcome = 'DEFENDED';
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // background grid (subtle)
+    ctx.strokeStyle = 'rgba(30,42,69,0.3)';
+    ctx.lineWidth = 0.5;
+    for (let g = 0; g < W; g += 44) {
+      ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, H); ctx.stroke();
+    }
+    for (let g = 0; g < H; g += 44) {
+      ctx.beginPath(); ctx.moveTo(0, g); ctx.lineTo(W, g); ctx.stroke();
+    }
+
+    // Layer rings (outermost first → innermost on top)
+    LAYERS.forEach((L, i) => {
+      const on = layerOn[i];
+      ctx.beginPath(); ctx.arc(CX, CY, L.px, 0, Math.PI * 2);
+      ctx.strokeStyle = on ? L.color : 'rgba(80,80,80,0.4)';
+      ctx.lineWidth = on ? 1.5 : 1;
+      ctx.setLineDash(on ? [] : [4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Filled wash for active detection layer
+      if (on && detectedBy === i) {
+        ctx.beginPath(); ctx.arc(CX, CY, L.px, 0, Math.PI * 2);
+        ctx.fillStyle = L.color.replace(')', ', 0.06)').replace('rgb', 'rgba').includes('rgba')
+          ? L.color + '14' : L.color + '14';
+        // hex with alpha - just use a simpler approach:
+        ctx.fillStyle = hexWithAlpha(L.color, 0.07);
+        ctx.fill();
+      }
+      // Label
+      ctx.fillStyle = on ? L.color : 'rgba(120,120,120,0.5)';
+      ctx.font = '10px Courier New';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${L.name} · ${L.km} km`, CX + L.px + 4, CY - 4);
+    });
+
+    // Asset (stadium)
+    ctx.fillStyle = '#f9d46e';
+    ctx.fillRect(CX - 9, CY - 9, 18, 18);
+    ctx.strokeStyle = '#c8a23d';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(CX - 9, CY - 9, 18, 18);
+    ctx.fillStyle = '#0a0e1a';
+    ctx.font = 'bold 10px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('A', CX, CY + 4);
+
+    // Drone
+    if (drone) {
+      // Trail line back to start
+      const dx = CX - drone.x, dy = CY - drone.y;
+      const dist = Math.hypot(dx, dy);
+      const trailX = drone.x - dx / dist * 30;
+      const trailY = drone.y - dy / dist * 30;
+      ctx.beginPath();
+      ctx.moveTo(trailX, trailY);
+      ctx.lineTo(drone.x, drone.y);
+      ctx.strokeStyle = 'rgba(249,124,110,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Drone body
+      ctx.beginPath();
+      ctx.arc(drone.x, drone.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = outcome === 'DEFENDED' ? '#666' :
+                      outcome === 'IMPACT'   ? '#ff4040' : '#f97c6e';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Impact flash
+      if (outcome === 'IMPACT') {
+        const t = (Date.now() % 600) / 600;
+        ctx.beginPath();
+        ctx.arc(CX, CY, 30 + t * 40, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,80,80,${1 - t})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+      if (outcome === 'DEFENDED') {
+        const t = (Date.now() % 800) / 800;
+        ctx.beginPath();
+        ctx.arc(drone.x, drone.y, 12 + t * 20, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(110,249,176,${1 - t})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  }
+
+  function hexWithAlpha(hex, a) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  function updateUI() {
+    // Layer toggle visuals
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('c1-layer-' + i);
+      if (!el) continue;
+      el.classList.toggle('off', !layerOn[i]);
+      el.querySelector('span:last-child').textContent = layerOn[i] ? 'ON' : 'OFF';
+    }
+    // Kill chain bar
+    const si = stageIndex();
+    for (let i = 0; i < STAGES.length; i++) {
+      const el = document.getElementById('c1-stage-' + i);
+      if (!el) continue;
+      el.classList.remove('active', 'done');
+      if (si > i || si >= STAGES.length) el.classList.add('done');
+      else if (si === i) el.classList.add('active');
+    }
+    // Outcome banner
+    const ob = document.getElementById('c1-outcome');
+    if (ob) {
+      ob.classList.remove('defended', 'impact');
+      if (outcome === 'DEFENDED') {
+        ob.classList.add('defended');
+        ob.textContent = '✓ DEFENDED';
+      } else if (outcome === 'IMPACT') {
+        ob.classList.add('impact');
+        ob.textContent = '✗ IMPACT';
+      } else if (drone) {
+        ob.textContent = si >= 0 ? `STAGE: ${STAGES[Math.min(si, STAGES.length - 1)]}` : 'TRACKING THREAT';
+      } else {
+        ob.textContent = 'AWAITING THREAT';
+      }
+    }
+    // Stats
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('c1-stat-speed', speedMps + ' m/s');
+    if (drone) {
+      const distPx = Math.hypot(CX - drone.x, CY - drone.y);
+      const distKm = (distPx * M_PER_PX / 1000).toFixed(2);
+      const tti = (distPx * M_PER_PX / speedMps).toFixed(1);
+      set('c1-stat-dist', distKm + ' km');
+      set('c1-stat-tti', outcome ? '—' : tti + ' s');
+      set('c1-stat-chain', chainStart !== null ? (timer - chainStart).toFixed(1) + ' s' : '—');
+      set('c1-stat-detector', detectedBy >= 0 ? LAYERS[detectedBy].name : '—');
+      set('c1-stat-stage', si >= 0 && si < STAGES.length ? STAGES[si] : (si >= STAGES.length ? 'COMPLETE' : '—'));
+    } else {
+      set('c1-stat-dist', '— km');
+      set('c1-stat-tti', '— s');
+      set('c1-stat-chain', '— s');
+      set('c1-stat-detector', '—');
+      set('c1-stat-stage', '—');
+    }
+  }
+
+  function loop(now) {
+    animId = requestAnimationFrame(loop);
+    if (!lastFrame) lastFrame = now;
+    const dt = Math.min((now - lastFrame) / 1000, 0.1);
+    lastFrame = now;
+    update(dt);
+    draw();
+    updateUI();
+  }
+
+  function init() {
+    canvas = document.getElementById('cuas1-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('c1-layer-' + i);
+      if (!el) continue;
+      el.addEventListener('click', () => { layerOn[i] = !layerOn[i]; });
+    }
+
+    const sp = document.getElementById('c1-speed');
+    const spVal = document.getElementById('c1-speed-val');
+    if (sp) {
+      sp.addEventListener('input', e => {
+        speedMps = parseInt(e.target.value, 10);
+        if (spVal) spVal.textContent = speedMps;
+      });
+    }
+
+    document.getElementById('c1-launch')?.addEventListener('click', launch);
+    document.getElementById('c1-pause')?.addEventListener('click', () => {
+      paused = !paused;
+      const b = document.getElementById('c1-pause');
+      if (b) b.textContent = paused ? 'Resume' : 'Pause';
+    });
+    document.getElementById('c1-reset')?.addEventListener('click', reset);
+
+    if (animId) cancelAnimationFrame(animId);
+    lastFrame = 0;
+    loop(0);
+  }
+
+  return { init };
+})();
+
+/* ============================================================
    GLOSSARY SEARCH
    ============================================================ */
 (function initGlossary() {
@@ -3595,6 +4127,7 @@ const M4 = (() => {
   function tryInit() {
     if (document.getElementById('m3-canvas')) M3.init();
     if (document.getElementById('m4-canvas')) M4.init();
+    if (document.getElementById('cuas1-canvas')) C1.init();
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', tryInit);
