@@ -1,0 +1,3607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drone Swarm Visualizer</title>
+  <style>
+    /* ============================================================
+       BASE RESET & LAYOUT
+    ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-base:      #0a0e1a;
+      --bg-panel:     #111827;
+      --bg-panel-alt: #0d1424;
+      --bg-input:     #0a0e1a;
+      --border:       #1e2d45;
+      --border-light: #2a3d5a;
+
+      --blue:   #7eb8f7;
+      --green:  #6ef9b0;
+      --red:    #f97c6e;
+      --yellow: #f9d46e;
+      --purple: #c0a0f0;
+      --dim:    #4a5f7a;
+      --text:   #c8d8ec;
+      --text-dim: #6a88aa;
+
+      --font: 'Courier New', Courier, monospace;
+      --radius: 4px;
+      --tab-h: 44px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-base);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5 {
+      font-family: var(--font);
+      font-weight: bold;
+      letter-spacing: 0.04em;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    .site-header {
+      background: var(--bg-panel);
+      border-bottom: 2px solid var(--blue);
+      padding: 14px 24px;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+    }
+    .site-header h1 {
+      font-size: 18px;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .site-header .subtitle {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* ============================================================
+       TAB NAVIGATION
+    ============================================================ */
+    .tab-nav {
+      display: flex;
+      background: var(--bg-panel-alt);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: transparent;
+      color: var(--text-dim);
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 0 18px;
+      height: var(--tab-h);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+    }
+    .tab-btn.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+    .tab-btn:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: -2px;
+    }
+
+    /* tab pane container */
+    .tab-content {
+      flex: 1;
+      overflow: auto;
+    }
+    .tab-pane {
+      display: none;
+      padding: 20px 24px;
+      min-height: 100%;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* ============================================================
+       THEORY PANEL (COLLAPSIBLE)
+    ============================================================ */
+    .theory-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--purple);
+      border-radius: var(--radius);
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .theory-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      user-select: none;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      color: var(--purple);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: background 0.12s;
+    }
+    .theory-header:hover {
+      background: rgba(192, 160, 240, 0.06);
+    }
+    .theory-arrow {
+      font-size: 10px;
+      transition: transform 0.2s;
+      color: var(--purple);
+      display: inline-block;
+    }
+    .theory-panel.open .theory-arrow {
+      transform: rotate(90deg);
+    }
+    .theory-body {
+      display: none;
+      padding: 12px 16px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .theory-panel.open .theory-body {
+      display: block;
+    }
+    .theory-body p + p {
+      margin-top: 8px;
+    }
+    .theory-body code {
+      color: var(--yellow);
+      background: rgba(249, 212, 110, 0.08);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .theory-body ul {
+      padding-left: 20px;
+      margin-top: 6px;
+    }
+    .theory-body li {
+      margin-bottom: 4px;
+    }
+
+    /* ============================================================
+       SHARED: SECTION HEADING
+    ============================================================ */
+    .section-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-subtitle {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+    }
+
+    /* ============================================================
+       SHARED: STAT BOX
+    ============================================================ */
+    .stat-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .stat-box .stat-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .stat-box .stat-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--green);
+      line-height: 1.2;
+    }
+    .stat-box .stat-unit {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .stat-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .stat-row .stat-box {
+      flex: 1;
+      min-width: 90px;
+    }
+
+    /* ============================================================
+       SHARED: LEGEND
+    ============================================================ */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      font-size: 11px;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* shared controls row (module-level) */
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin: 16px auto;
+      padding: 12px 14px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .controls-row .ctrl-btn {
+      padding: 9px 20px;
+      font-size: 12px;
+    }
+    .legend-line {
+      width: 18px;
+      height: 2px;
+      flex-shrink: 0;
+    }
+    .legend-square {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       SHARED: INFO BAR
+    ============================================================ */
+    .info-bar {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--yellow);
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .info-bar .info-icon {
+      color: var(--yellow);
+      font-size: 13px;
+      flex-shrink: 0;
+      line-height: 1.4;
+    }
+
+    /* ============================================================
+       SHARED: BUTTONS
+    ============================================================ */
+    .btn {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border: 1px solid var(--border-light);
+      background: var(--bg-panel);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+    .btn:active {
+      background: rgba(126, 184, 247, 0.08);
+    }
+    .btn.primary {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+    .btn.primary:hover {
+      background: rgba(126, 184, 247, 0.12);
+    }
+    .btn.success {
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .btn.danger {
+      border-color: var(--red);
+      color: var(--red);
+    }
+    .btn.warning {
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    /* ============================================================
+       SHARED: CANVAS WRAPPER
+    ============================================================ */
+    .canvas-wrap {
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+    }
+    .canvas-wrap canvas {
+      display: block;
+    }
+    .canvas-overlay {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 10px;
+      color: var(--dim);
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       MODULE 1 — ARCHITECTURE LAYOUT
+    ============================================================ */
+    .m1-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    @media (max-width: 700px) {
+      .m1-grid { grid-template-columns: 1fr; }
+    }
+    .arch-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .arch-panel h3 {
+      font-size: 12px;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    .arch-panel .arch-canvas-wrap {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      aspect-ratio: 4 / 3;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .arch-panel .arch-canvas-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .node-list {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .node-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text);
+    }
+    .node-entry .node-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .node-entry .node-role {
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    /* ============================================================
+       MODULE 2 — BOIDS LAYOUT
+    ============================================================ */
+    #pane-m2 .m2-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 16px;
+    }
+    @media (max-width: 800px) {
+      #pane-m2 .m2-layout { grid-template-columns: 1fr; }
+    }
+    .boids-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .slider-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .slider-panel h4 {
+      font-size: 11px;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 10px;
+    }
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .slider-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text);
+    }
+    .slider-row label span {
+      color: var(--yellow);
+      font-weight: bold;
+    }
+    .slider-row input[type="range"] {
+      width: 100%;
+      appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border-light);
+      outline: none;
+      cursor: pointer;
+    }
+    .slider-row input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--blue);
+      cursor: pointer;
+      border: none;
+    }
+    .slider-row input[type="range"]::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--blue);
+      cursor: pointer;
+      border: none;
+    }
+    .boids-main {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .boids-canvas-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+    }
+    .boids-canvas-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ============================================================
+       MODULE 3 — MESH & GOSSIP LAYOUT
+    ============================================================ */
+    #pane-m3 .m3-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 700px) {
+      #pane-m3 .m3-layout { grid-template-columns: 1fr; }
+    }
+    .mesh-canvas-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .mesh-canvas-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .gossip-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .gossip-panel h4 {
+      font-size: 11px;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 10px;
+    }
+    .gossip-log {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      height: 180px;
+      overflow-y: auto;
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .gossip-log .log-entry {
+      display: flex;
+      gap: 8px;
+    }
+    .gossip-log .log-time {
+      color: var(--dim);
+      flex-shrink: 0;
+    }
+    .gossip-log .log-src  { color: var(--blue); }
+    .gossip-log .log-msg  { color: var(--text); }
+    .gossip-log .log-ok   { color: var(--green); }
+    .gossip-log .log-warn { color: var(--yellow); }
+    .gossip-log .log-err  { color: var(--red); }
+    .m3-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ============================================================
+       MODULE 4 — PATH PLANNING LAYOUT
+    ============================================================ */
+    .mod4-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr 220px;
+      gap: 16px;
+      align-items: start;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 860px) {
+      .mod4-layout { grid-template-columns: 1fr; }
+    }
+    .mod4-sidebar { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .mod4-canvas-wrap {
+      min-width: 0;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+    .mod4-canvas-wrap canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+    }
+    .mod4-stats { min-width: 0; }
+    .layer-btn.active, .m4-scene-btn.active {
+      border-color: var(--blue) !important;
+      color: var(--blue) !important;
+      background: rgba(126,184,247,0.08);
+    }
+    .path-canvas-wrap {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+    }
+    .path-canvas-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .path-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .path-info-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .path-info-panel h4 {
+      font-size: 11px;
+      color: var(--yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 10px;
+    }
+    .path-stat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .path-stat-table td {
+      padding: 3px 0;
+    }
+    .path-stat-table td:first-child {
+      color: var(--text-dim);
+      padding-right: 10px;
+    }
+    .path-stat-table td:last-child {
+      color: var(--green);
+      text-align: right;
+    }
+    .waypoint-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .waypoint-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px 8px;
+    }
+    .waypoint-entry .wp-index {
+      color: var(--yellow);
+      font-weight: bold;
+      min-width: 18px;
+    }
+    .waypoint-entry .wp-coords {
+      color: var(--text-dim);
+      flex: 1;
+    }
+    .waypoint-entry .wp-status {
+      font-size: 10px;
+    }
+    .wp-status.reached  { color: var(--green); }
+    .wp-status.current  { color: var(--blue); }
+    .wp-status.pending  { color: var(--dim); }
+
+    /* ============================================================
+       GLOSSARY LAYOUT
+    ============================================================ */
+    #pane-gloss .gloss-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .gloss-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .gloss-card .gloss-term {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .gloss-card .gloss-def {
+      font-size: 11px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .gloss-card .gloss-formula {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--yellow);
+      background: rgba(249, 212, 110, 0.06);
+      border-left: 2px solid var(--yellow);
+      padding: 4px 8px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .gloss-card .gloss-tag {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid;
+      border-radius: 2px;
+      padding: 1px 5px;
+    }
+    .gloss-tag.tag-boids   { color: var(--green);  border-color: var(--green); }
+    .gloss-tag.tag-mesh    { color: var(--blue);   border-color: var(--blue); }
+    .gloss-tag.tag-path    { color: var(--yellow); border-color: var(--yellow); }
+    .gloss-tag.tag-arch    { color: var(--purple); border-color: var(--purple); }
+    .gloss-tag.tag-comms   { color: var(--red);    border-color: var(--red); }
+
+    .gloss-search {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .gloss-search input {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 7px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .gloss-search input::placeholder { color: var(--dim); }
+    .gloss-search input:focus { border-color: var(--blue); }
+
+    /* ============================================================
+       SCROLLBAR STYLE
+    ============================================================ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+    /* ============================================================
+       MODULE 2 & 3 LAYOUT FIX (match actual HTML classes)
+    ============================================================ */
+    .mod2-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 220px;
+      gap: 16px;
+      align-items: start;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .mod3-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 220px;
+      gap: 16px;
+      align-items: start;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 860px) {
+      .mod2-layout, .mod3-layout { grid-template-columns: 1fr; }
+    }
+
+    .mod2-sidebar, .mod3-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+    .mod2-canvas-wrap, .mod3-canvas-wrap {
+      min-width: 0;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+    .mod2-canvas-wrap canvas, .mod3-canvas-wrap canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .mod2-stats, .mod3-stats { min-width: 0; }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text);
+    }
+    .slider-val { color: var(--yellow); font-weight: bold; }
+    .mod2-sidebar input[type="range"],
+    .mod3-sidebar input[type="range"] {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border-light);
+      outline: none;
+      cursor: pointer;
+    }
+    .mod2-sidebar input[type="range"]::-webkit-slider-thumb,
+    .mod3-sidebar input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--blue);
+      cursor: pointer;
+    }
+
+    .stats-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+      gap: 10px;
+    }
+    .stats-row span:last-child { color: var(--text); font-weight: bold; }
+    .badge {
+      padding: 1px 8px;
+      border-radius: 3px;
+      background: rgba(110,249,176,0.15);
+      color: var(--green) !important;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .sidebar-section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin: 8px 0 2px;
+    }
+    .presets-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      max-width: 1100px;
+      margin: 14px auto;
+    }
+    .presets-label { font-size: 11px; color: var(--text-dim); }
+    .preset-btn {
+      font-family: var(--font);
+      font-size: 11px;
+      padding: 6px 14px;
+      border: 1px solid var(--border-light);
+      background: var(--bg-panel);
+      color: var(--text);
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+    .preset-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    .boid-info-panel {
+      margin-top: 8px;
+      background: var(--bg-panel);
+      border: 1px solid var(--blue);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+    .boid-info-title {
+      font-size: 11px;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .boid-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+      padding: 1px 0;
+    }
+    .boid-info-row span:last-child { color: var(--text); font-weight: bold; }
+
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <h1>Drone Swarm Visualizer</h1>
+    <span class="subtitle">Interactive exploration of swarm intelligence &amp; distributed coordination</span>
+  </header>
+
+  <nav class="tab-nav" role="tablist" aria-label="Modules">
+    <button class="tab-btn active" role="tab" aria-selected="true"  aria-controls="tab-mod1"     id="tab-m1"   data-target="mod1">Module 1&mdash;Architecture</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-mod2"     id="tab-m2"   data-target="mod2">Module 2&mdash;Boids</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-mod3"     id="tab-m3"   data-target="mod3">Module 3&mdash;Mesh &amp; Gossip</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-mod4"     id="tab-m4"   data-target="mod4">Module 4&mdash;Path Planning</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-glossary" id="tab-gloss" data-target="glossary">Glossary</button>
+  </nav>
+
+<!-- MODULE 1 -->
+<div id="tab-mod1" class="tab-pane active">
+
+  <details class="theory-panel">
+    <summary>Core Theory</summary>
+    <div class="theory-body">
+      <div class="theory-item">
+        <span class="theory-term">SPOF</span>
+        <span class="theory-def">Single Point of Failure — one node whose death kills the entire system. In a centralized fleet of N drones, the ground station is a SPOF.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">O(N) Complexity</span>
+        <span class="theory-def">Centralized comms scale as O(N) — doubling the fleet doubles the controller's load. Decentralized scales as O(k) where k = fixed neighbor count.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">CAP Theorem</span>
+        <span class="theory-def">A distributed system cannot simultaneously guarantee Consistency, Availability, and Partition tolerance. Centralized fleets choose CA. Decentralized swarms choose AP.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Latency</span>
+        <span class="theory-def">Centralized round-trip = sensor→controller→command → 100–500ms. Decentralized local reaction = sensor→act → &lt;10ms.</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="m1-grid">
+
+    <div class="arch-panel">
+      <h3>Centralized Fleet</h3>
+      <div class="arch-canvas-wrap">
+        <canvas id="c-central" width="480" height="340"></canvas>
+      </div>
+      <div class="status-box">
+        <div class="status-row"><span class="status-label">Active Drones</span><span id="c-active" class="status-val">—</span></div>
+        <div class="status-row"><span class="status-label">Controller</span><span id="c-ctrl" class="status-val">—</span></div>
+        <div class="status-row"><span class="status-label">Mission</span><span id="c-mission" class="status-val">—</span></div>
+        <div class="status-row"><span class="status-label">Latency</span><span id="c-latency" class="status-val">—</span></div>
+      </div>
+    </div>
+
+    <div class="arch-panel">
+      <h3>Decentralized Swarm</h3>
+      <div class="arch-canvas-wrap">
+        <canvas id="c-decentral" width="480" height="340"></canvas>
+      </div>
+      <div class="status-box">
+        <div class="status-row"><span class="status-label">Active Drones</span><span id="d-active" class="status-val">—</span></div>
+        <div class="status-row"><span class="status-label">Mesh</span><span id="d-mesh" class="status-val">—</span></div>
+        <div class="status-row"><span class="status-label">Mission</span><span id="d-mission" class="status-val">—</span></div>
+        <div class="status-row"><span class="status-label">Latency</span><span id="d-latency" class="status-val">—</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="controls-row">
+    <button id="btn-kill" class="ctrl-btn ctrl-btn--danger">Kill Random Drone</button>
+    <button id="btn-pause" class="ctrl-btn">Pause</button>
+    <button id="btn-reset" class="ctrl-btn">Reset</button>
+  </div>
+
+  <div class="bw-meter">
+    <span class="bw-label">BANDWIDTH LOAD</span>
+    <div class="bw-track">
+      <div id="bw-bar" class="bw-fill"></div>
+    </div>
+    <span id="bw-text" class="bw-text">0%</span>
+  </div>
+
+  <div class="legend-row">
+    <span class="legend-item"><span class="legend-dot legend-dot--red"></span>Centralized (SPOF risk)</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--green"></span>Decentralized (fault tolerant)</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--gray"></span>Dead drone</span>
+  </div>
+
+  <div class="info-bar">
+    Kill a drone in the centralized fleet to see cascading failure. The decentralized swarm self-heals around any single loss.
+  </div>
+
+</div>
+
+
+<!-- MODULE 2 -->
+<div id="tab-mod2" class="tab-pane">
+
+  <details class="theory-panel">
+    <summary>Boids Algorithm — Reynolds 1987</summary>
+    <div class="theory-body">
+      <div class="theory-item">
+        <span class="theory-term">Separation</span>
+        <span class="theory-def">steer += (self.pos − neighbor.pos).normalize() for neighbors within sepRadius. Prevents collision.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Alignment</span>
+        <span class="theory-def">steer += (avg_neighbor_velocity − self.velocity) × aliWeight. Creates coherent heading.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Cohesion</span>
+        <span class="theory-def">steer += (centroid_of_neighbors − self.pos) × cohWeight. Gravitational pull of the group.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Emergence</span>
+        <span class="theory-def">No drone knows the formation shape. The shape emerges from N agents each running 3 rules locally.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Topological vs Metric</span>
+        <span class="theory-def">Metric: sense all neighbors within radius R. Topological: sense exactly k nearest neighbors regardless of distance. Starlings use k=7.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Noise</span>
+        <span class="theory-def">Calibrated randomness prevents swarms getting stuck in local optima. Too little = brittle. Too much = chaos.</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="mod2-layout">
+
+    <div class="mod2-sidebar">
+      <div class="slider-group">
+        <label class="slider-label">Separation Weight<span class="slider-val" id="sep-w-val">1.5</span></label>
+        <input type="range" id="sep-w" min="0" max="4" step="0.1" value="1.5">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Separation Radius<span class="slider-val" id="sep-r-val">25</span></label>
+        <input type="range" id="sep-r" min="10" max="80" step="1" value="25">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Alignment Weight<span class="slider-val" id="ali-w-val">1.0</span></label>
+        <input type="range" id="ali-w" min="0" max="4" step="0.1" value="1.0">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Alignment Radius<span class="slider-val" id="ali-r-val">50</span></label>
+        <input type="range" id="ali-r" min="20" max="150" step="1" value="50">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Cohesion Weight<span class="slider-val" id="coh-w-val">1.0</span></label>
+        <input type="range" id="coh-w" min="0" max="4" step="0.1" value="1.0">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Cohesion Radius<span class="slider-val" id="coh-r-val">80</span></label>
+        <input type="range" id="coh-r" min="20" max="200" step="1" value="80">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Drones<span class="slider-val" id="n-drones-val">40</span></label>
+        <input type="range" id="n-drones" min="10" max="120" step="1" value="40">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Max Speed<span class="slider-val" id="max-spd-val">3.0</span></label>
+        <input type="range" id="max-spd" min="0.5" max="6" step="0.1" value="3.0">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Noise<span class="slider-val" id="noise-val">0.10</span></label>
+        <input type="range" id="noise" min="0" max="1" step="0.05" value="0.10">
+      </div>
+      <button id="b-neighbor-mode" class="ctrl-btn ctrl-btn--toggle">Mode: METRIC</button>
+    </div>
+
+    <div class="mod2-canvas-wrap">
+      <canvas id="boids-canvas" width="620" height="480"></canvas>
+
+      <div id="boid-info" class="boid-info-panel" style="display:none;">
+        <div class="boid-info-title">Selected Boid</div>
+        <div class="boid-info-row"><span>ID</span><span id="bi-id">—</span></div>
+        <div class="boid-info-row"><span>Neighbors</span><span id="bi-neighbors">—</span></div>
+        <div class="boid-info-row"><span>Sep Force</span><span id="bi-sep">—</span></div>
+        <div class="boid-info-row"><span>Ali Force</span><span id="bi-ali">—</span></div>
+        <div class="boid-info-row"><span>Coh Force</span><span id="bi-coh">—</span></div>
+        <div class="boid-info-row"><span>Speed</span><span id="bi-spd">—</span></div>
+      </div>
+    </div>
+
+    <div class="mod2-stats">
+      <div class="stats-box">
+        <div class="stats-row"><span>State</span><span id="m2-state" class="badge">NOMINAL</span></div>
+        <div class="stats-row"><span>Active</span><span id="m2-active">—</span></div>
+        <div class="stats-row"><span>Rogue</span><span id="m2-rogue">—</span></div>
+        <div class="stats-row"><span>Avg Speed</span><span id="m2-spd">—</span></div>
+        <div class="stats-row"><span>Avg Density</span><span id="m2-density">—</span></div>
+        <div class="stats-row"><span>Cohesion Force</span><span id="m2-coh-force">—</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="presets-row">
+    <span class="presets-label">Presets:</span>
+    <button class="preset-btn" data-preset="nominal">Nominal</button>
+    <button class="preset-btn" data-preset="cluster">Cluster</button>
+    <button class="preset-btn" data-preset="scatter">Scatter</button>
+    <button class="preset-btn" data-preset="rogue">Rogue</button>
+    <button class="preset-btn" data-preset="search">Search</button>
+  </div>
+
+  <div class="controls-row">
+    <button id="m2-btn-rogue" class="ctrl-btn ctrl-btn--danger">Add Rogue</button>
+    <button id="m2-btn-pause" class="ctrl-btn">Pause</button>
+    <button id="m2-btn-reset" class="ctrl-btn">Reset</button>
+  </div>
+
+  <div class="info-bar">
+    Click any boid to inspect its per-frame force breakdown. Drag sliders to reshape emergent behavior in real time.
+  </div>
+
+</div>
+
+
+<!-- MODULE 3 -->
+<div id="tab-mod3" class="tab-pane">
+
+  <details class="theory-panel">
+    <summary>Mesh Networks &amp; Gossip Protocol</summary>
+    <div class="theory-body">
+      <div class="theory-item">
+        <span class="theory-term">Inverse Square Law</span>
+        <span class="theory-def">Signal power ∝ 1/d². Double the distance → quarter the signal. At 2.4GHz, -10 to -20dB loss per concrete wall.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Gossip Convergence</span>
+        <span class="theory-def">In a swarm of N drones each gossiping to k neighbors, message reaches all nodes in log_k(N) cycles. N=100, k=3 → 4.2 cycles ≈ 420ms.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Latency Stack</span>
+        <span class="theory-def">sensor(1-5ms) + decision(1-10ms) + encode(0.1ms) + TX(0.5ms/hop) × hops = 30-80ms end-to-end for 6 hops.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">TDMA</span>
+        <span class="theory-def">Time Division Multiple Access — each drone gets an assigned time slot to transmit, eliminating simultaneous collision.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Hidden Node</span>
+        <span class="theory-def">Node A and C both in range of B but not each other. Both transmit to B simultaneously → packet collision.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Quorum</span>
+        <span class="theory-def">A detection requires N independent confirmations before action. Prevents false positives from propagating.</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="mod3-layout">
+
+    <div class="mod3-sidebar">
+      <div class="sidebar-section-title">Inject Event</div>
+      <button id="m3-inject-true" class="ctrl-btn ctrl-btn--green m3-btn">Inject True Detection</button>
+      <button id="m3-inject-false" class="ctrl-btn ctrl-btn--yellow m3-btn">Inject False Detection</button>
+      <button id="m3-inject-nofly" class="ctrl-btn ctrl-btn--red m3-btn">Inject False No-Fly</button>
+      <div class="sidebar-section-title">Network</div>
+      <button id="m3-wall-btn" class="ctrl-btn ctrl-btn--yellow">Create Partition</button>
+      <button id="m3-relay-add" class="ctrl-btn ctrl-btn--purple m3-btn">Add Relay Drone</button>
+      <button id="m3-anchor-add" class="ctrl-btn m3-btn">Add UWB Anchor</button>
+      <button id="m3-hidden-btn" class="ctrl-btn m3-btn">Hidden Node Demo</button>
+      <div class="sidebar-section-title">Controls</div>
+      <button id="m3-pause" class="ctrl-btn">Pause</button>
+      <button id="m3-reset" class="ctrl-btn">Reset</button>
+    </div>
+
+    <div class="mod3-canvas-wrap">
+      <canvas id="m3-canvas" width="680" height="440"></canvas>
+    </div>
+
+    <div class="mod3-stats">
+      <div class="stats-box">
+        <div class="stats-row"><span>Gossip Spread</span><span id="m3-gossip-count">—</span></div>
+        <div class="stats-row"><span>Confirmed</span><span id="m3-confirmed">—</span></div>
+        <div class="stats-row"><span>No-Fly Count</span><span id="m3-nofly">—</span></div>
+        <div class="stats-row"><span>Relay Count</span><span id="m3-relays">—</span></div>
+        <div class="stats-row"><span>Partition</span><span id="m3-partition">None</span></div>
+        <div class="stats-row"><span>UWB Anchors</span><span id="m3-anchors">—</span></div>
+        <div class="stats-row"><span>Max Hops</span><span id="m3-hops">—</span></div>
+      </div>
+      <div class="quorum-section">
+        <div class="quorum-label">QUORUM PROGRESS</div>
+        <div class="bw-track">
+          <div id="m3-quorum-bar" class="bw-fill bw-fill--blue"></div>
+        </div>
+        <span id="m3-quorum-text" class="bw-text">0 / 0</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend-row">
+    <span class="legend-item"><span class="legend-dot legend-dot--green"></span>True detection propagating</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--yellow"></span>False positive (suppressed by quorum)</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--red"></span>No-fly injected</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--purple"></span>Relay drone</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--blue"></span>UWB anchor</span>
+  </div>
+
+  <div class="info-bar">
+    Create a partition then add a relay drone to watch the mesh self-heal. Inject false positives to see quorum suppression in action.
+  </div>
+
+</div>
+
+
+<!-- MODULE 4 -->
+<div id="tab-mod4" class="tab-pane">
+
+  <details class="theory-panel">
+    <summary>Path Planning &amp; Obstacle Avoidance</summary>
+    <div class="theory-body">
+      <div class="theory-item">
+        <span class="theory-term">Potential Fields</span>
+        <span class="theory-def">F_total = W_goal × attract(goal) + W_wall × repel(walls) + W_agent × repel(agents). Each force = strength × direction_vector.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Local Minima</span>
+        <span class="theory-def">A point where ∇F = 0 and F &gt; 0. Forces balance to zero net force. Drone oscillates permanently. Only Layer 3 (A*) escapes this.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">A* Algorithm</span>
+        <span class="theory-def">f(n) = g(n) + h(n). g = cost from start. h = heuristic to goal (Manhattan distance). Always expand lowest-f frontier node.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">SLAM</span>
+        <span class="theory-def">Simultaneous Localization And Mapping. Chicken-and-egg: need map to localize, need position to map. Solved with probability distributions.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Frontier Exploration</span>
+        <span class="theory-def">Frontier = explored cell adjacent to unexplored cell. Assign each drone its nearest unclaimed frontier. Map grows outward until no frontiers remain.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Stigmergy</span>
+        <span class="theory-def">Indirect coordination through environment modification. Ants leave pheromones. Drones leave digital marks. Other agents' behavior changes in response.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Velocity Obstacles</span>
+        <span class="theory-def">VO(A,B) = set of velocities for A that cause collision with B within time T. Agent selects velocity outside all VO cones.</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="mod4-layout">
+
+    <div class="mod4-sidebar">
+      <div class="sidebar-section-title">Scenario</div>
+      <button class="m4-scene-btn ctrl-btn active" data-scene="localminima">Local Minima Trap</button>
+      <button class="m4-scene-btn ctrl-btn" data-scene="deadlock">Doorway Deadlock</button>
+      <button class="m4-scene-btn ctrl-btn" data-scene="frontier">Frontier Exploration</button>
+      <button class="m4-scene-btn ctrl-btn" data-scene="bottleneck">Bottleneck / Traffic</button>
+      <button class="m4-scene-btn ctrl-btn" data-scene="stigmergy">Stigmergy</button>
+
+      <div class="sidebar-section-title">Layers</div>
+      <button id="m4-toggle-astar" class="layer-btn ctrl-btn">Enable A*</button>
+      <button id="m4-toggle-forces" class="layer-btn ctrl-btn">Show Forces</button>
+      <button id="m4-toggle-paths" class="layer-btn ctrl-btn">Hide A* Paths</button>
+      <button id="m4-toggle-heat" class="layer-btn ctrl-btn">Heat Map</button>
+      <button id="m4-toggle-vo" class="layer-btn ctrl-btn">Show VO Cones</button>
+
+      <div class="sidebar-section-title">Controls</div>
+      <button id="m4-pause" class="ctrl-btn">Pause</button>
+      <button id="m4-reset" class="ctrl-btn">Reset</button>
+    </div>
+
+    <div class="mod4-canvas-wrap">
+      <canvas id="m4-canvas" width="700" height="460"></canvas>
+    </div>
+
+    <div class="mod4-stats">
+      <div class="stats-box">
+        <div class="stats-row"><span>Scenario</span><span id="m4-scenario">—</span></div>
+        <div class="stats-row"><span>Agents</span><span id="m4-agents">—</span></div>
+        <div class="stats-row"><span>Stuck</span><span id="m4-stuck">—</span></div>
+        <div class="stats-row"><span>Moving</span><span id="m4-moving">—</span></div>
+        <div class="stats-row"><span>Explored</span><span id="m4-explored">—</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend-row">
+    <span class="legend-item"><span class="legend-dot legend-dot--red legend-dot--pulse"></span>Stuck drone</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--green legend-dot--crosshair"></span>Goal</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--yellow"></span>Frontier cell</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--cyan"></span>Repulsion force</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--orange"></span>Attraction force</span>
+    <span class="legend-item"><span class="legend-dot legend-dot--amber"></span>Pheromone trail</span>
+  </div>
+
+  <div class="info-bar">
+    Select a scenario, then toggle layers to visualize how A*, potential fields, and VO cones interact. Watch stigmergy trails persist and fade.
+  </div>
+
+</div>
+
+
+<!-- GLOSSARY -->
+<div id="tab-glossary" class="tab-pane">
+
+  <div class="gloss-search-wrap">
+    <input type="text" id="gloss-search" class="gloss-search-input" placeholder="Search terms...">
+  </div>
+
+  <div id="gloss-grid" class="gloss-grid">
+
+    <div class="gloss-card" data-modules="ALL">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Emergence</span>
+        <span class="gloss-badge gloss-badge--all">ALL</span>
+      </div>
+      <p class="gloss-def">Complex global behavior arising from simple local rules with no central coordinator.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="ALL">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Swarm Intelligence</span>
+        <span class="gloss-badge gloss-badge--all">ALL</span>
+      </div>
+      <p class="gloss-def">Collective behavior of decentralized, self-organized systems following local rules.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M2">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Boids</span>
+        <span class="gloss-badge gloss-badge--m2">M2</span>
+      </div>
+      <p class="gloss-def">Craig Reynolds' 1987 algorithm simulating flocking using three rules: separation, alignment, cohesion.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M2">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Separation</span>
+        <span class="gloss-badge gloss-badge--m2">M2</span>
+      </div>
+      <p class="gloss-def">The rule that steers a drone away from crowded neighbors to prevent collision.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M2">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Alignment</span>
+        <span class="gloss-badge gloss-badge--m2">M2</span>
+      </div>
+      <p class="gloss-def">The rule that steers a drone toward the average heading of its neighbors.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M2">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Cohesion</span>
+        <span class="gloss-badge gloss-badge--m2">M2</span>
+      </div>
+      <p class="gloss-def">The rule that steers a drone toward the centroid of its neighbor group.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M2">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Topological Neighbor</span>
+        <span class="gloss-badge gloss-badge--m2">M2</span>
+      </div>
+      <p class="gloss-def">A neighbor defined by social rank (e.g., the 7 nearest) regardless of physical distance.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M2">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Metric Neighbor</span>
+        <span class="gloss-badge gloss-badge--m2">M2</span>
+      </div>
+      <p class="gloss-def">A neighbor defined by physical distance — all agents within radius R.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Local Minima</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">A point in a potential field where all forces balance to zero, trapping an agent permanently.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Potential Fields</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">Navigation method where obstacles repel and goals attract, producing a force vector per agent per frame.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">A*</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">Pathfinding algorithm using f(n)=g(n)+h(n) to find optimal paths on a known map.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">SLAM</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">Simultaneous Localization And Mapping — building a map while tracking position within it.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Frontier Exploration</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">Strategy where drones target the boundary between explored and unexplored space.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Stigmergy</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">Indirect coordination where agents modify the environment and others respond to those modifications.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Velocity Obstacle</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">The set of velocities that would cause an agent to collide with a neighbor within time T.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Deadlock</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">A stable equilibrium where two agents block each other permanently with no self-resolving mechanism.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">SPOF</span>
+        <span class="gloss-badge gloss-badge--m1">M1</span>
+      </div>
+      <p class="gloss-def">Single Point of Failure — one node whose death causes total system failure.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Decentralized Control</span>
+        <span class="gloss-badge gloss-badge--m1">M1</span>
+      </div>
+      <p class="gloss-def">Architecture where each agent makes decisions locally with no central coordinator.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">CAP Theorem</span>
+        <span class="gloss-badge gloss-badge--m1">M1</span>
+      </div>
+      <p class="gloss-def">A distributed system cannot simultaneously guarantee Consistency, Availability, and Partition tolerance.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Mesh Network</span>
+        <span class="gloss-badge gloss-badge--m3">M3</span>
+      </div>
+      <p class="gloss-def">A network where every node is simultaneously sender, receiver, and router — no infrastructure dependency.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Gossip Protocol</span>
+        <span class="gloss-badge gloss-badge--m3">M3</span>
+      </div>
+      <p class="gloss-def">Information spreading method where each node shares state with k random neighbors each cycle.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Quorum</span>
+        <span class="gloss-badge gloss-badge--m3">M3</span>
+      </div>
+      <p class="gloss-def">Minimum number of independent confirmations required before a detection is acted upon.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">TDMA</span>
+        <span class="gloss-badge gloss-badge--m3">M3</span>
+      </div>
+      <p class="gloss-def">Time Division Multiple Access — each node gets an assigned transmit slot, eliminating collision.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Hidden Node Problem</span>
+        <span class="gloss-badge gloss-badge--m3">M3</span>
+      </div>
+      <p class="gloss-def">Two nodes both in range of a third but not each other, causing simultaneous collision at the third.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Attenuation</span>
+        <span class="gloss-badge gloss-badge--m3">M3</span>
+      </div>
+      <p class="gloss-def">Signal power loss with distance following inverse square law: P ∝ 1/d².</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Latency</span>
+        <span class="gloss-badge gloss-badge--m3">M3</span>
+      </div>
+      <p class="gloss-def">Time delay between event occurrence and action taken in response.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M1">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Self-Healing</span>
+        <span class="gloss-badge gloss-badge--m1">M1</span>
+      </div>
+      <p class="gloss-def">Property of mesh networks to automatically reroute around failed nodes.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">GPS-Denied Navigation</span>
+        <span class="gloss-badge gloss-badge--m3">M3</span>
+      </div>
+      <p class="gloss-def">Operating without GPS using visual odometry, IMU dead reckoning, or UWB ranging.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="M4">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Cooperative SLAM</span>
+        <span class="gloss-badge gloss-badge--m4">M4</span>
+      </div>
+      <p class="gloss-def">Multiple agents sharing sensor observations to build a collective map faster than any individual could.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="ALL">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Emergent Behavior</span>
+        <span class="gloss-badge gloss-badge--all">ALL</span>
+      </div>
+      <p class="gloss-def">Behavior that was never explicitly programmed, arising only from local agent interactions.</p>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// MODULE 1: Architecture (Centralized vs Decentralized)
+// ============================================================
+const M1 = (() => {
+  const N = 12;
+  const MESH_RADIUS = 160;
+  const ORBIT_SPEED = 0.004;
+  const DRONE_R = 7;
+  const CTRL_R = 13;
+
+  let drones = [];
+  let centralDead = false;
+  let paused = false;
+  let tick = 0;
+  let animFrameId = null;
+
+  function init() {
+    drones = [];
+    centralDead = false;
+    for (let i = 0; i < N; i++) {
+      const angle = (i / N) * Math.PI * 2;
+      drones.push({
+        id: i,
+        angle: angle,
+        decentralAngle: angle,
+        orbitR: 110 + (i % 3) * 20,
+        speed: ORBIT_SPEED * (0.8 + Math.random() * 0.4),
+        alive: true,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  function pos(drone, canvas) {
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const a = canvas.id === 'c-decentral' ? drone.decentralAngle : drone.angle;
+    return {
+      x: cx + Math.cos(a) * drone.orbitR,
+      y: cy + Math.sin(a) * drone.orbitR,
+    };
+  }
+
+  function drawLine(ctx, x1, y1, x2, y2, color, width, dash = []) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.setLineDash(dash);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDrone(ctx, x, y, alive, frozen) {
+    ctx.save();
+    if (!alive) {
+      ctx.fillStyle = '#555';
+      ctx.strokeStyle = '#333';
+    } else if (frozen) {
+      ctx.fillStyle = '#8888ff';
+      ctx.strokeStyle = '#aaaaff';
+    } else {
+      ctx.fillStyle = '#00e5ff';
+      ctx.strokeStyle = '#80ffff';
+    }
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, DRONE_R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner dot
+    if (alive) {
+      ctx.fillStyle = frozen ? '#ccccff' : '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawCentral() {
+    const canvas = document.getElementById('c-central');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const cx = W / 2;
+    const cy = H / 2;
+
+    // Clear
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0a0a1a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 30) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 30) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Draw comm lines from center to each drone
+    drones.forEach(d => {
+      const p = pos(d, canvas);
+      if (!d.alive) {
+        drawLine(ctx, cx, cy, p.x, p.y, 'rgba(255,80,80,0.2)', 1, [4, 4]);
+      } else if (centralDead) {
+        drawLine(ctx, cx, cy, p.x, p.y, 'rgba(255,200,0,0.18)', 1, [6, 6]);
+      } else {
+        const alpha = 0.15 + 0.25 * (0.5 + 0.5 * Math.sin(tick * 0.05 + d.phase));
+        drawLine(ctx, cx, cy, p.x, p.y, `rgba(0,229,255,${alpha})`, 1);
+      }
+    });
+
+    // Controller node
+    ctx.save();
+    if (centralDead) {
+      const pulse = 0.5 + 0.5 * Math.sin(tick * 0.1);
+      ctx.shadowColor = `rgba(255,50,50,${pulse})`;
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#cc2222';
+      ctx.strokeStyle = '#ff5555';
+    } else {
+      const pulse = 0.5 + 0.5 * Math.sin(tick * 0.06);
+      ctx.shadowColor = `rgba(255,200,0,${pulse * 0.8})`;
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = '#c8a000';
+      ctx.strokeStyle = '#ffd700';
+    }
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, CTRL_R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = centralDead ? '#ff8888' : '#ffd700';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(centralDead ? 'DEAD' : 'CTRL', cx, cy + CTRL_R + 14);
+    ctx.restore();
+
+    // Draw drones
+    drones.forEach(d => {
+      const p = pos(d, canvas);
+      drawDrone(ctx, p.x, p.y, d.alive, centralDead && d.alive);
+      if (d.alive) {
+        ctx.fillStyle = 'rgba(0,229,255,0.6)';
+        ctx.font = '8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(d.id, p.x, p.y + DRONE_R + 10);
+      }
+    });
+
+    updateCentralStatus();
+  }
+
+  function drawDecentral() {
+    const canvas = document.getElementById('c-decentral');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0a0a1a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 30) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 30) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Mesh links between alive neighbors
+    const aliveDrones = drones.filter(d => d.alive);
+    for (let i = 0; i < aliveDrones.length; i++) {
+      for (let j = i + 1; j < aliveDrones.length; j++) {
+        const a = aliveDrones[i];
+        const b = aliveDrones[j];
+        const pa = pos(a, canvas);
+        const pb = pos(b, canvas);
+        const dx = pa.x - pb.x;
+        const dy = pa.y - pb.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < MESH_RADIUS) {
+          const alpha = Math.max(0, (1 - dist / MESH_RADIUS) ** 2) * 0.7;
+          const pulse = 0.6 + 0.4 * Math.sin(tick * 0.04 + a.phase + b.phase);
+          drawLine(ctx, pa.x, pa.y, pb.x, pb.y,
+            `rgba(0,229,255,${alpha * pulse})`, 1.2);
+        }
+      }
+    }
+
+    // Draw drones
+    drones.forEach(d => {
+      const p = pos(d, canvas);
+      drawDrone(ctx, p.x, p.y, d.alive, false);
+      if (d.alive) {
+        ctx.fillStyle = 'rgba(0,229,255,0.6)';
+        ctx.font = '8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(d.id, p.x, p.y + DRONE_R + 10);
+      }
+    });
+
+    updateDecentralStatus();
+  }
+
+  function updateCentralStatus() {
+    const alive = drones.filter(d => d.alive).length;
+    const el = id => document.getElementById(id);
+
+    if (el('c-active')) el('c-active').textContent = alive;
+    if (el('c-ctrl')) {
+      el('c-ctrl').textContent = centralDead ? 'OFFLINE' : 'ONLINE';
+      el('c-ctrl').style.color = centralDead ? '#ff5555' : '#00e5ff';
+    }
+    if (el('c-mission')) {
+      const pct = centralDead ? 0 : Math.round((alive / N) * 100);
+      el('c-mission').textContent = centralDead ? 'ABORTED' : pct + '%';
+      el('c-mission').style.color = centralDead ? '#ff5555' : (pct > 70 ? '#00ff88' : '#ffaa00');
+    }
+    if (el('c-latency')) {
+      if (centralDead) {
+        el('c-latency').textContent = 'ROUND-TRIP: ∞ms (OFFLINE)';
+        el('c-latency').style.color = '#ff5555';
+      } else {
+        const ms = 120 + drones.filter(d => d.alive).length * 8;
+        el('c-latency').textContent = 'ROUND-TRIP: ~' + ms + 'ms';
+        el('c-latency').style.color = '#aaaaaa';
+      }
+    }
+  }
+
+  function updateDecentralStatus() {
+    const alive = drones.filter(d => d.alive).length;
+    const el = id => document.getElementById(id);
+
+    if (el('d-active')) el('d-active').textContent = alive;
+
+    // Count mesh links
+    const canvas = document.getElementById('c-decentral');
+    let meshLinks = 0;
+    const aliveDrones = drones.filter(d => d.alive);
+    if (canvas) {
+      for (let i = 0; i < aliveDrones.length; i++) {
+        for (let j = i + 1; j < aliveDrones.length; j++) {
+          const pa = pos(aliveDrones[i], canvas);
+          const pb = pos(aliveDrones[j], canvas);
+          const dx = pa.x - pb.x;
+          const dy = pa.y - pb.y;
+          if (Math.sqrt(dx * dx + dy * dy) < MESH_RADIUS) meshLinks++;
+        }
+      }
+    }
+    if (el('d-mesh')) el('d-mesh').textContent = meshLinks;
+    if (el('d-mission')) {
+      const pct = Math.round((alive / N) * 100);
+      el('d-mission').textContent = pct + '%';
+      el('d-mission').style.color = pct > 70 ? '#00ff88' : '#ffaa00';
+    }
+    if (el('d-latency')) {
+      el('d-latency').textContent = 'LOCAL REACT: ~' + (4 + Math.floor(Math.random() * 6)) + 'ms';
+    }
+  }
+
+  function updateBandwidth() {
+    const packets = centralDead ? 0 : drones.filter(d => d.alive).length * 2;
+    const max = 24;
+    const percent = (packets / max) * 100;
+    const bar = document.getElementById('bw-bar');
+    const text = document.getElementById('bw-text');
+    if (bar) {
+      bar.style.width = percent + '%';
+      bar.style.backgroundColor = percent > 70 ? '#ff8800' : '#00e5ff';
+    }
+    if (text) {
+      text.textContent = packets + ' packets/cycle (O(N) scaling)';
+    }
+  }
+
+  function advanceAngles() {
+    drones.forEach(d => {
+      if (d.alive) {
+        d.decentralAngle += d.speed;
+        if (!centralDead) {
+          d.angle += d.speed;
+        }
+      }
+    });
+  }
+
+  function animateM1() {
+    animFrameId = requestAnimationFrame(animateM1);
+    if (paused) return;
+    tick++;
+    advanceAngles();
+    drawCentral();
+    drawDecentral();
+    updateBandwidth();
+  }
+
+  function bindControls() {
+    const killBtn = document.getElementById('btn-kill');
+    const pauseBtn = document.getElementById('btn-pause');
+    const resetBtn = document.getElementById('btn-reset');
+
+    if (killBtn) {
+      killBtn.addEventListener('click', () => {
+        if (Math.random() < 0.35) {
+          centralDead = true;
+        } else {
+          const alive = drones.filter(d => d.alive);
+          if (alive.length > 0) {
+            alive[Math.floor(Math.random() * alive.length)].alive = false;
+          }
+        }
+      });
+    }
+
+    if (pauseBtn) {
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        init();
+        paused = false;
+        if (pauseBtn) pauseBtn.textContent = 'PAUSE';
+      });
+    }
+  }
+
+  // Start
+  init();
+  bindControls();
+  animateM1();
+
+  return { init, drones: () => drones };
+})();
+
+
+// ============================================================
+// MODULE 2: Boids
+// ============================================================
+const BOIDS = (() => {
+  // Config
+  const P = {
+    sepW: 1.5,
+    sepR: 30,
+    aliW: 1.0,
+    aliR: 60,
+    cohW: 1.0,
+    cohR: 80,
+    maxSpd: 2.5,
+    n: 60,
+    noise: 0,
+  };
+
+  let boids = [];
+  let paused = false;
+  let tick = 0;
+  let selectedBoid = null;
+  let neighborMode = 'metric'; // or 'topological'
+  let animFrameId = null;
+  let boidIdCounter = 0;
+
+  const TOPOLOGICAL_K = 7;
+
+  // ---- Presets ----
+  const PRESETS = {
+    nominal: { sepW: 1.5, sepR: 30, aliW: 1.0, aliR: 60, cohW: 1.0, cohR: 80, maxSpd: 2.5, n: 60, noise: 0 },
+    cluster:  { sepW: 0.4, sepR: 15, aliW: 2.0, aliR: 80, cohW: 3.0, cohR: 120, maxSpd: 1.8, n: 60, noise: 0 },
+    scatter:  { sepW: 4.0, sepR: 60, aliW: 0.2, aliR: 40, cohW: 0.1, cohR: 40,  maxSpd: 3.5, n: 60, noise: 0.8 },
+    rogue:    { sepW: 1.5, sepR: 30, aliW: 1.0, aliR: 60, cohW: 1.0, cohR: 80,  maxSpd: 2.5, n: 60, noise: 0 },
+    search:   { sepW: 2.0, sepR: 40, aliW: 0.5, aliR: 90, cohW: 0.5, cohR: 100, maxSpd: 3.0, n: 80, noise: 0.3 },
+  };
+
+  function getCanvas() {
+    return document.getElementById('boids-canvas');
+  }
+
+  function initBoids() {
+    const canvas = getCanvas();
+    const W = canvas ? canvas.width : 620;
+    const H = canvas ? canvas.height : 480;
+    boids = [];
+    boidIdCounter = 0;
+    for (let i = 0; i < P.n; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const spd = P.maxSpd * (0.5 + Math.random() * 0.5);
+      boids.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        rogue: false,
+        id: boidIdCounter++,
+      });
+    }
+    selectedBoid = null;
+    hideBoidInfo();
+  }
+
+  // ---- Neighbor selection ----
+  function getNeighbors(b, radius) {
+    if (neighborMode === 'topological') {
+      // Sort all other boids by distance, take nearest TOPOLOGICAL_K
+      return boids
+        .filter(o => o !== b)
+        .map(o => {
+          const dx = o.x - b.x;
+          const dy = o.y - b.y;
+          return { boid: o, dist2: dx * dx + dy * dy };
+        })
+        .sort((a, c) => a.dist2 - c.dist2)
+        .slice(0, TOPOLOGICAL_K)
+        .map(e => e.boid);
+    } else {
+      const r2 = radius * radius;
+      return boids.filter(o => {
+        if (o === b) return false;
+        const dx = o.x - b.x;
+        const dy = o.y - b.y;
+        return dx * dx + dy * dy <= r2;
+      });
+    }
+  }
+
+  // ---- Rules ----
+  function separation(b, neighbors) {
+    let fx = 0, fy = 0;
+    const inRange = neighbors.filter(o => {
+      const dx = b.x - o.x;
+      const dy = b.y - o.y;
+      return dx * dx + dy * dy <= P.sepR * P.sepR;
+    });
+    inRange.forEach(o => {
+      const dx = b.x - o.x;
+      const dy = b.y - o.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+      fx += dx / dist;
+      fy += dy / dist;
+    });
+    return [fx * P.sepW, fy * P.sepW];
+  }
+
+  function alignment(b, neighbors) {
+    if (b.rogue) return [0, 0];
+    const inRange = neighbors.filter(o => {
+      const dx = b.x - o.x;
+      const dy = b.y - o.y;
+      return dx * dx + dy * dy <= P.aliR * P.aliR;
+    });
+    if (inRange.length === 0) return [0, 0];
+    let avgVx = 0, avgVy = 0;
+    inRange.forEach(o => { avgVx += o.vx; avgVy += o.vy; });
+    avgVx /= inRange.length;
+    avgVy /= inRange.length;
+    return [(avgVx - b.vx) * P.aliW * 0.1, (avgVy - b.vy) * P.aliW * 0.1];
+  }
+
+  function cohesion(b, neighbors) {
+    const inRange = neighbors.filter(o => {
+      const dx = b.x - o.x;
+      const dy = b.y - o.y;
+      return dx * dx + dy * dy <= P.cohR * P.cohR;
+    });
+    if (inRange.length === 0) return [0, 0];
+    let cx = 0, cy = 0;
+    inRange.forEach(o => { cx += o.x; cy += o.y; });
+    cx /= inRange.length;
+    cy /= inRange.length;
+    return [(cx - b.x) * P.cohW * 0.001, (cy - b.y) * P.cohW * 0.001];
+  }
+
+  // ---- Update ----
+  function updateBoids() {
+    const canvas = getCanvas();
+    if (!canvas) return;
+    const W = canvas.width;
+    const H = canvas.height;
+
+    boids.forEach(b => {
+      // Noise
+      b.vx += (Math.random() - 0.5) * P.noise * 0.5;
+      b.vy += (Math.random() - 0.5) * P.noise * 0.5;
+
+      // Neighbor list (use largest radius to get superset for rule filtering)
+      const maxR = Math.max(P.sepR, P.aliR, P.cohR);
+      const neighbors = getNeighbors(b, maxR);
+
+      const [sx, sy] = separation(b, neighbors);
+      const [ax, ay] = alignment(b, neighbors);
+      const [cx, cy] = cohesion(b, neighbors);
+
+      b.vx += sx + ax + cx;
+      b.vy += sy + ay + cy;
+
+      // Clamp speed
+      const spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+      if (spd > P.maxSpd) {
+        b.vx = (b.vx / spd) * P.maxSpd;
+        b.vy = (b.vy / spd) * P.maxSpd;
+      }
+
+      // Move
+      b.x += b.vx;
+      b.y += b.vy;
+
+      // Wrap edges
+      if (b.x < 0) b.x += W;
+      if (b.x > W) b.x -= W;
+      if (b.y < 0) b.y += H;
+      if (b.y > H) b.y -= H;
+    });
+  }
+
+  // ---- Draw ----
+  function drawBoids() {
+    const canvas = getCanvas();
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#080818';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,229,255,0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Selected boid perception rings + force arrows
+    if (selectedBoid) {
+      const sb = selectedBoid;
+      ctx.save();
+      // Sep ring
+      ctx.strokeStyle = 'rgba(255,80,80,0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.arc(sb.x, sb.y, P.sepR, 0, Math.PI * 2); ctx.stroke();
+      // Ali ring
+      ctx.strokeStyle = 'rgba(255,220,0,0.35)';
+      ctx.beginPath(); ctx.arc(sb.x, sb.y, P.aliR, 0, Math.PI * 2); ctx.stroke();
+      // Coh ring
+      ctx.strokeStyle = 'rgba(80,150,255,0.35)';
+      ctx.beginPath(); ctx.arc(sb.x, sb.y, P.cohR, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Force arrows
+      const maxR = Math.max(P.sepR, P.aliR, P.cohR);
+      const neighbors = getNeighbors(sb, maxR);
+      const [sx, sy] = separation(sb, neighbors);
+      const [ax, ay] = alignment(sb, neighbors);
+      const [cx, cy] = cohesion(sb, neighbors);
+      drawArrow(ctx, sb.x, sb.y, sb.x + sx * 20, sb.y + sy * 20, 'rgba(255,80,80,0.9)', 2);
+      drawArrow(ctx, sb.x, sb.y, sb.x + ax * 200, sb.y + ay * 200, 'rgba(255,220,0,0.9)', 2);
+      drawArrow(ctx, sb.x, sb.y, sb.x + cx * 5000, sb.y + cy * 5000, 'rgba(80,150,255,0.9)', 2);
+      ctx.restore();
+    }
+
+    // Draw all boids
+    boids.forEach(b => {
+      const angle = Math.atan2(b.vy, b.vx);
+      const size = b.rogue ? 10 : 7;
+      const isSelected = selectedBoid && selectedBoid.id === b.id;
+
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.rotate(angle);
+
+      if (b.rogue) {
+        ctx.fillStyle = '#ff3333';
+        ctx.strokeStyle = '#ff8888';
+      } else if (isSelected) {
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#00e5ff';
+      } else {
+        ctx.fillStyle = '#00aacc';
+        ctx.strokeStyle = '#00e5ff';
+      }
+      ctx.lineWidth = 1.5;
+
+      // Arrow triangle
+      ctx.beginPath();
+      ctx.moveTo(size, 0);
+      ctx.lineTo(-size * 0.6, -size * 0.5);
+      ctx.lineTo(-size * 0.4, 0);
+      ctx.lineTo(-size * 0.6, size * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawArrow(ctx, x1, y1, x2, y2, color, width) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 2) return;
+    const angle = Math.atan2(dy, dx);
+    const headLen = 8;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Arrowhead
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ---- Stats ----
+  function computeAvgDensity() {
+    if (boids.length === 0) return 0;
+    let totalNeighbors = 0;
+    const R = 80;
+    boids.forEach(b => {
+      boids.forEach(o => {
+        if (o === b) return;
+        const dx = b.x - o.x;
+        const dy = b.y - o.y;
+        if (dx * dx + dy * dy <= R * R) totalNeighbors++;
+      });
+    });
+    return totalNeighbors / boids.length;
+  }
+
+  function updateStats() {
+    const el = id => document.getElementById(id);
+
+    const aliveBoids = boids.length;
+    const rogueCt = boids.filter(b => b.rogue).length;
+
+    let totalSpd = 0;
+    boids.forEach(b => totalSpd += Math.sqrt(b.vx * b.vx + b.vy * b.vy));
+    const avgSpd = aliveBoids > 0 ? (totalSpd / aliveBoids).toFixed(2) : '0.00';
+
+    const avgDensity = computeAvgDensity();
+
+    let state = 'NOMINAL';
+    let stateColor = '#00ff88';
+    if (avgDensity > 12) { state = 'CLUSTERING'; stateColor = '#ffaa00'; }
+    else if (avgDensity < 2) { state = 'SCATTERING'; stateColor = '#ff5555'; }
+
+    // Cohesion factor: how aligned velocities are
+    let cohF = 0;
+    if (aliveBoids > 1) {
+      let avgVx = 0, avgVy = 0;
+      boids.forEach(b => { avgVx += b.vx; avgVy += b.vy; });
+      avgVx /= aliveBoids; avgVy /= aliveBoids;
+      const avgMag = Math.sqrt(avgVx * avgVx + avgVy * avgVy);
+      const totMag = totalSpd / aliveBoids;
+      cohF = totMag > 0 ? (avgMag / totMag).toFixed(2) : '0.00';
+    }
+
+    if (el('b-state')) { el('b-state').textContent = state; el('b-state').style.color = stateColor; }
+    if (el('b-count')) el('b-count').textContent = aliveBoids;
+    if (el('b-rogue')) el('b-rogue').textContent = rogueCt;
+    if (el('b-spd')) el('b-spd').textContent = avgSpd;
+    if (el('b-density')) el('b-density').textContent = avgDensity.toFixed(1);
+    if (el('b-coh-f')) el('b-coh-f').textContent = cohF;
+  }
+
+  // ---- Selected boid panel ----
+  function hideBoidInfo() {
+    const panel = document.getElementById('boid-info');
+    if (panel) panel.style.display = 'none';
+  }
+
+  function updateBoidInfo() {
+    if (!selectedBoid) return;
+    const b = selectedBoid;
+    // Re-find in current boids array (it may have been replaced)
+    const live = boids.find(o => o.id === b.id);
+    if (!live) { selectedBoid = null; hideBoidInfo(); return; }
+
+    const panel = document.getElementById('boid-info');
+    if (panel) panel.style.display = 'block';
+
+    const el = id => document.getElementById(id);
+    const maxR = Math.max(P.sepR, P.aliR, P.cohR);
+    const neighbors = getNeighbors(live, maxR);
+    const [sx, sy] = separation(live, neighbors);
+    const [ax, ay] = alignment(live, neighbors);
+    const [cx, cy] = cohesion(live, neighbors);
+    const spd = Math.sqrt(live.vx * live.vx + live.vy * live.vy);
+
+    if (el('bi-id')) el('bi-id').textContent = live.id;
+    if (el('bi-neighbors')) el('bi-neighbors').textContent = neighbors.length;
+    if (el('bi-sep')) el('bi-sep').textContent = Math.sqrt(sx * sx + sy * sy).toFixed(3);
+    if (el('bi-ali')) el('bi-ali').textContent = Math.sqrt(ax * ax + ay * ay).toFixed(3);
+    if (el('bi-coh')) el('bi-coh').textContent = Math.sqrt(cx * cx + cy * cy).toFixed(4);
+    if (el('bi-spd')) el('bi-spd').textContent = spd.toFixed(2);
+  }
+
+  // ---- Main loop ----
+  function animateBoids() {
+    animFrameId = requestAnimationFrame(animateBoids);
+    if (paused) return;
+    tick++;
+    updateBoids();
+    drawBoids();
+    updateStats();
+    updateBoidInfo();
+  }
+
+  // ---- Controls ----
+  function applyPreset(name) {
+    const preset = PRESETS[name];
+    if (!preset) return;
+    Object.assign(P, preset);
+
+    if (name === 'rogue') {
+      // Set ~20% rogue after reinit
+      initBoids();
+      const rogueCount = Math.floor(boids.length * 0.2);
+      for (let i = 0; i < rogueCount; i++) {
+        boids[Math.floor(Math.random() * boids.length)].rogue = true;
+      }
+    } else {
+      initBoids();
+    }
+
+    syncSliders();
+  }
+
+  function syncSliders() {
+    const sliderMap = [
+      ['sep-w', 'sep-val', 'sepW'],
+      ['sep-r', 'sep-r-val', 'sepR'],
+      ['ali-w', 'ali-val', 'aliW'],
+      ['ali-r', 'ali-r-val', 'aliR'],
+      ['coh-w', 'coh-val', 'cohW'],
+      ['coh-r', 'coh-r-val', 'cohR'],
+      ['n-drones', 'n-val', 'n'],
+      ['max-spd', 'spd-val', 'maxSpd'],
+      ['noise', 'noise-val', 'noise'],
+    ];
+    sliderMap.forEach(([sliderId, displayId, key]) => {
+      const slider = document.getElementById(sliderId);
+      const display = document.getElementById(displayId);
+      if (slider) slider.value = P[key];
+      if (display) display.textContent = P[key];
+    });
+  }
+
+  function bindControls() {
+    // Buttons
+    const rogueBtn = document.getElementById('m2-btn-rogue');
+    const pauseBtn = document.getElementById('m2-btn-pause');
+    const resetBtn = document.getElementById('m2-btn-reset');
+    const neighborModeBtn = document.getElementById('b-neighbor-mode');
+
+    if (rogueBtn) {
+      rogueBtn.addEventListener('click', () => {
+        if (boids.length === 0) return;
+        // Toggle random boid rogue
+        const target = boids[Math.floor(Math.random() * boids.length)];
+        target.rogue = !target.rogue;
+      });
+    }
+
+    if (pauseBtn) {
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        initBoids();
+        paused = false;
+        if (pauseBtn) pauseBtn.textContent = 'PAUSE';
+      });
+    }
+
+    if (neighborModeBtn) {
+      neighborModeBtn.addEventListener('click', () => {
+        neighborMode = neighborMode === 'metric' ? 'topological' : 'metric';
+        neighborModeBtn.textContent = neighborMode === 'metric' ? 'METRIC' : 'TOPOLOGICAL (7)';
+      });
+    }
+
+    // Preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = btn.getAttribute('data-preset');
+        if (preset) applyPreset(preset);
+      });
+    });
+
+    // Sliders
+    const sliderBindings = [
+      ['sep-w', 'sep-val', 'sepW', parseFloat],
+      ['sep-r', 'sep-r-val', 'sepR', parseFloat],
+      ['ali-w', 'ali-val', 'aliW', parseFloat],
+      ['ali-r', 'ali-r-val', 'aliR', parseFloat],
+      ['coh-w', 'coh-val', 'cohW', parseFloat],
+      ['coh-r', 'coh-r-val', 'cohR', parseFloat],
+      ['n-drones', 'n-val', 'n', parseInt],
+      ['max-spd', 'spd-val', 'maxSpd', parseFloat],
+      ['noise', 'noise-val', 'noise', parseFloat],
+    ];
+
+    sliderBindings.forEach(([sliderId, displayId, key, parse]) => {
+      const slider = document.getElementById(sliderId);
+      const display = document.getElementById(displayId);
+      if (slider) {
+        slider.addEventListener('input', () => {
+          const val = parse(slider.value);
+          P[key] = val;
+          if (display) display.textContent = val;
+          // If n changed, reinit
+          if (key === 'n') initBoids();
+        });
+      }
+    });
+
+    // Canvas click: select boid
+    const canvas = getCanvas();
+    if (canvas) {
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        let best = null;
+        let bestDist2 = 15 * 15;
+        boids.forEach(b => {
+          const dx = b.x - mx;
+          const dy = b.y - my;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < bestDist2) { bestDist2 = d2; best = b; }
+        });
+        if (best) {
+          selectedBoid = best;
+          const panel = document.getElementById('boid-info');
+          if (panel) panel.style.display = 'block';
+        } else {
+          selectedBoid = null;
+          hideBoidInfo();
+        }
+      });
+    }
+  }
+
+  // ---- Start ----
+  initBoids();
+  bindControls();
+  syncSliders();
+  animateBoids();
+
+  return { P, boids: () => boids, applyPreset };
+})();
+
+/* part4.js — Module 3 (Mesh), Module 4 (Path Planning), Glossary, Theory Panels, Tab Switching */
+
+/* ============================================================
+   MODULE 3 — MESH NETWORKING
+   ============================================================ */
+const M3 = (() => {
+  const MESH_R = 110;
+  const DRONE_R = 7;
+  const QUORUM = 3;
+  const W = 680;
+  const H = 440;
+
+  let canvas, ctx;
+  let nodes = [];
+  let paused = false;
+  let tick = 0;
+  let wallActive = false;
+  let wallX = W / 2;
+  let hiddenNodeMode = false;
+  let animId = null;
+  let maxHopSeen = 0;
+  let gossipEvents = [];
+  let noflyZone = null;
+
+  function lerp(a, b, t) {
+    return a + (b - a) * Math.max(0, Math.min(1, t));
+  }
+
+  function dist(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  function makeNode(x, y, type = 'normal') {
+    return {
+      x, y, type,
+      gossip: null,
+      nofly: false,
+      noflyAge: 0,
+      confirmations: 0,
+      hopCount: 0,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6,
+    };
+  }
+
+  function initNodes() {
+    nodes = [];
+    // normal nodes
+    const positions = [
+      [120, 100], [280, 80], [450, 110], [600, 90],
+      [80, 260], [200, 300], [360, 260], [500, 300],
+      [150, 390], [350, 400], [540, 380], [630, 280],
+      [680, 180], [400, 180], [260, 200],
+    ];
+    positions.forEach(([x, y]) => nodes.push(makeNode(x, y, 'normal')));
+    // two relay nodes
+    const r1 = makeNode(320, 200, 'relay');
+    const r2 = makeNode(480, 330, 'relay');
+    nodes.push(r1, r2);
+    // one anchor node
+    const a1 = makeNode(340, 360, 'anchor');
+    nodes.push(a1);
+
+    noflyZone = null;
+    maxHopSeen = 0;
+    gossipEvents = [];
+    hiddenNodeMode = false;
+    wallActive = false;
+    tick = 0;
+  }
+
+  function linkBlocked(a, b) {
+    if (!wallActive) return false;
+    // check if segment a-b crosses vertical wall at wallX
+    const minX = Math.min(a.x, b.x);
+    const maxX = Math.max(a.x, b.x);
+    if (wallX <= minX || wallX >= maxX) return false;
+    const t = (wallX - a.x) / (b.x - a.x);
+    const iy = a.y + t * (b.y - a.y);
+    return iy >= 80 && iy <= H - 80;
+  }
+
+  function getNeighbors(node) {
+    return nodes.filter(n => {
+      if (n === node) return false;
+      const d = dist(node, n);
+      const r = node.type === 'relay' || n.type === 'relay' ? MESH_R * 1.3 : MESH_R;
+      if (d > r) return false;
+      if (linkBlocked(node, n)) return false;
+      return true;
+    });
+  }
+
+  function spreadGossip() {
+    nodes.forEach(node => {
+      if (!node.gossip) return;
+      const neighbors = getNeighbors(node);
+      neighbors.forEach(nb => {
+        if (!nb.gossip || nb.gossip.age > node.gossip.age) {
+          const newHops = (node.gossip.hops || 0) + 1;
+          nb.gossip = { kind: node.gossip.kind, age: node.gossip.age + 1, hops: newHops };
+          nb.hopCount = newHops;
+          if (newHops > maxHopSeen) maxHopSeen = newHops;
+          if (node.gossip.kind === 'true-det') {
+            nb.confirmations = Math.min(QUORUM, (nb.confirmations || 0) + 1);
+          }
+          gossipEvents.push({ x: nb.x, y: nb.y, age: 0, hops: newHops, kind: node.gossip.kind });
+        }
+      });
+    });
+  }
+
+  function updateNodes() {
+    if (hiddenNodeMode) return;
+    nodes.forEach(node => {
+      if (node.type === 'anchor') return;
+      node.x += node.vx;
+      node.y += node.vy;
+      if (node.x < DRONE_R || node.x > W - DRONE_R) node.vx *= -1;
+      if (node.y < DRONE_R || node.y > H - DRONE_R) node.vy *= -1;
+      if (noflyZone) {
+        const d = dist(node, noflyZone);
+        if (d < noflyZone.r + DRONE_R) {
+          const angle = Math.atan2(node.y - noflyZone.y, node.x - noflyZone.x);
+          node.x = noflyZone.x + Math.cos(angle) * (noflyZone.r + DRONE_R + 2);
+          node.y = noflyZone.y + Math.sin(angle) * (noflyZone.r + DRONE_R + 2);
+          node.nofly = true;
+          node.noflyAge = 60;
+        }
+      }
+      if (node.noflyAge > 0) node.noflyAge--;
+    });
+  }
+
+  function drawLinks() {
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const r = (a.type === 'relay' || b.type === 'relay') ? MESH_R * 1.3 : MESH_R;
+        const d = dist(a, b);
+        if (d > r) continue;
+        if (linkBlocked(a, b)) continue;
+        const t = 1 - d / r;
+        const lw = lerp(0.5, 2.5, t);
+        const alpha = lerp(0.05, 0.45, t);
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.lineWidth = lw;
+        ctx.strokeStyle = `rgba(100, 200, 255, ${alpha})`;
+        ctx.stroke();
+      }
+    }
+  }
+
+  function drawNodes() {
+    nodes.forEach(node => {
+      ctx.save();
+      if (node.type === 'relay') {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, DRONE_R + 3, 0, Math.PI * 2);
+        ctx.fillStyle = node.gossip ? '#c084fc' : '#9333ea';
+        ctx.fill();
+        ctx.strokeStyle = '#e9d5ff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else if (node.type === 'anchor') {
+        const s = DRONE_R + 3;
+        ctx.beginPath();
+        ctx.rect(node.x - s, node.y - s, s * 2, s * 2);
+        ctx.fillStyle = node.gossip ? '#fde68a' : '#f59e0b';
+        ctx.fill();
+        ctx.strokeStyle = '#fef3c7';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else if (node.type === 'hidden') {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, DRONE_R, 0, Math.PI * 2);
+        ctx.fillStyle = '#f87171';
+        ctx.fill();
+        ctx.strokeStyle = '#fca5a5';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // label
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.label || '', node.x, node.y);
+      } else {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, DRONE_R, 0, Math.PI * 2);
+        const baseColor = node.confirmations >= QUORUM ? '#4ade80' :
+                          node.gossip ? '#60a5fa' : '#94a3b8';
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      // hop count badge
+      if (node.hopCount > 0) {
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.font = '7px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(`HOP:${node.hopCount}`, node.x + DRONE_R + 1, node.y - 1);
+      }
+      ctx.restore();
+    });
+  }
+
+  function drawGossipRings() {
+    gossipEvents = gossipEvents.filter(e => e.age < 50);
+    gossipEvents.forEach(e => {
+      const progress = e.age / 50;
+      const radius = 12 + progress * 30;
+      const alpha = (1 - progress) * 0.6;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = e.kind === 'false-det' ? `rgba(251,191,36,${alpha})` :
+                        e.kind === 'nofly' ? `rgba(239,68,68,${alpha})` :
+                        `rgba(96,165,250,${alpha})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      e.age++;
+    });
+  }
+
+  function drawNoFlyZone() {
+    if (!noflyZone) return;
+    ctx.beginPath();
+    ctx.arc(noflyZone.x, noflyZone.y, noflyZone.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(239,68,68,0.12)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(239,68,68,0.7)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(239,68,68,0.8)';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('NO-FLY', noflyZone.x, noflyZone.y - noflyZone.r - 5);
+  }
+
+  function drawWall() {
+    if (!wallActive) return;
+    ctx.fillStyle = 'rgba(30,30,30,0.85)';
+    ctx.fillRect(wallX - 6, 80, 12, H - 160);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('WALL', wallX, 70);
+  }
+
+  function drawHiddenNodeMode() {
+    if (!hiddenNodeMode) return;
+    const nodeA = nodes.find(n => n.label === 'A');
+    const nodeC = nodes.find(n => n.label === 'C');
+    if (!nodeA || !nodeC) return;
+    [nodeA, nodeC].forEach(n => {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, MESH_R, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251,191,36,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+    // collision flash on B
+    const nodeB = nodes.find(n => n.label === 'B');
+    if (nodeB && tick % 90 < 15) {
+      const flashAlpha = 1 - (tick % 90) / 15;
+      ctx.beginPath();
+      ctx.arc(nodeB.x, nodeB.y, DRONE_R + 10, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(239,68,68,${flashAlpha * 0.6})`;
+      ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('COLLISION', nodeB.x, nodeB.y - DRONE_R - 14);
+    }
+  }
+
+  function drawBackground() {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function updateStats() {
+    const gossipCount = nodes.filter(n => n.gossip).length;
+    const confirmed = nodes.filter(n => n.confirmations >= QUORUM).length;
+    const noflyNodes = nodes.filter(n => n.noflyAge > 0).length;
+    const relays = nodes.filter(n => n.type === 'relay').length;
+    const anchors = nodes.filter(n => n.type === 'anchor').length;
+
+    // partition check: BFS from node[0]
+    let visited = new Set();
+    let queue = [nodes[0]];
+    visited.add(nodes[0]);
+    while (queue.length) {
+      const cur = queue.shift();
+      getNeighbors(cur).forEach(nb => {
+        if (!visited.has(nb)) { visited.add(nb); queue.push(nb); }
+      });
+    }
+    const partitioned = visited.size < nodes.length;
+
+    setText('m3-gossip-count', gossipCount);
+    setText('m3-confirmed', confirmed);
+    setText('m3-nofly', noflyNodes);
+    setText('m3-relays', relays);
+    setText('m3-anchors', anchors);
+    setText('m3-partition', partitioned ? 'YES' : 'NO');
+    setText('m3-hops', maxHopSeen);
+
+    const maxConfirm = Math.max(...nodes.map(n => n.confirmations), 0);
+    const quorumPct = Math.min(100, (maxConfirm / QUORUM) * 100);
+    const bar = document.getElementById('m3-quorum-bar');
+    if (bar) bar.style.width = quorumPct + '%';
+    setText('m3-quorum-text', `${maxConfirm}/${QUORUM}`);
+  }
+
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  function draw() {
+    drawBackground();
+    drawWall();
+    drawNoFlyZone();
+    drawLinks();
+    drawGossipRings();
+    drawHiddenNodeMode();
+    drawNodes();
+  }
+
+  function loop() {
+    if (!paused) {
+      tick++;
+      updateNodes();
+      if (tick % 8 === 0) spreadGossip();
+    }
+    draw();
+    updateStats();
+    animId = requestAnimationFrame(loop);
+  }
+
+  function triggerGossip(kind) {
+    const src = nodes[Math.floor(Math.random() * nodes.length)];
+    src.gossip = { kind, age: 0, hops: 0 };
+    src.hopCount = 0;
+    if (kind === 'true-det') src.confirmations = 1;
+    gossipEvents.push({ x: src.x, y: src.y, age: 0, hops: 0, kind });
+    maxHopSeen = 0;
+    nodes.forEach(n => { if (n !== src) { n.gossip = null; n.hopCount = 0; n.confirmations = 0; } });
+  }
+
+  function setupHiddenNodeMode() {
+    hiddenNodeMode = true;
+    nodes = nodes.filter(n => n.type !== 'hidden');
+    const A = makeNode(170, 220, 'hidden'); A.label = 'A';
+    const B = makeNode(340, 220, 'hidden'); B.label = 'B';
+    const C = makeNode(510, 220, 'hidden'); C.label = 'C';
+    nodes.push(A, B, C);
+  }
+
+  function init() {
+    canvas = document.getElementById('m3-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    initNodes();
+
+    document.getElementById('m3-inject-true')?.addEventListener('click', () => triggerGossip('true-det'));
+    document.getElementById('m3-inject-false')?.addEventListener('click', () => triggerGossip('false-det'));
+
+    document.getElementById('m3-inject-nofly')?.addEventListener('click', () => {
+      noflyZone = noflyZone ? null : { x: W / 2, y: H / 2, r: 70 };
+      if (noflyZone) {
+        nodes.forEach(n => {
+          const d = dist(n, noflyZone);
+          if (d < noflyZone.r + DRONE_R) {
+            n.gossip = { kind: 'nofly', age: 0, hops: 0 };
+            n.hopCount = 0;
+          }
+        });
+      }
+    });
+
+    document.getElementById('m3-wall-btn')?.addEventListener('click', () => {
+      wallActive = !wallActive;
+    });
+
+    document.getElementById('m3-relay-add')?.addEventListener('click', () => {
+      const n = makeNode(W / 2 + (Math.random() - 0.5) * 100, H / 2 + (Math.random() - 0.5) * 100, 'relay');
+      nodes.push(n);
+    });
+
+    document.getElementById('m3-anchor-add')?.addEventListener('click', () => {
+      const n = makeNode(80 + Math.random() * (W - 160), 80 + Math.random() * (H - 160), 'anchor');
+      nodes.push(n);
+    });
+
+    document.getElementById('m3-hidden-btn')?.addEventListener('click', () => {
+      initNodes();
+      setupHiddenNodeMode();
+    });
+
+    document.getElementById('m3-reset')?.addEventListener('click', () => {
+      initNodes();
+    });
+
+    document.getElementById('m3-pause')?.addEventListener('click', () => {
+      paused = !paused;
+      const btn = document.getElementById('m3-pause');
+      if (btn) btn.textContent = paused ? 'Resume' : 'Pause';
+    });
+
+    if (animId) cancelAnimationFrame(animId);
+    loop();
+  }
+
+  return { init };
+})();
+
+/* ============================================================
+   MODULE 4 — PATH PLANNING (curriculum scenarios)
+   ============================================================ */
+const M4 = (() => {
+  const CELL = 20;
+  const CW = 700, CH = 460;
+  const COLS = Math.floor(CW / CELL);
+  const ROWS = Math.floor(CH / CELL);
+
+  let grid = [], explored = [], pheromone = [];
+  let agents = [], goals = [];
+  let canvas, ctx;
+  let paused = false, tick = 0, animId = null;
+  let showForces = false, showPaths = true, showFog = false;
+  let showHeat = false, showVO = false;
+  let astarEnabled = false;
+  let currentScenario = 'localminima';
+
+  const SCENARIOS = {
+    localminima: { label: 'Local Minima Trap' },
+    deadlock:    { label: 'Doorway Deadlock' },
+    frontier:    { label: 'Frontier Exploration' },
+    bottleneck:  { label: 'Bottleneck / Traffic' },
+    stigmergy:   { label: 'Stigmergy / Pheromones' },
+  };
+
+  // ---------- grid helpers ----------
+  function makeGrid() {
+    grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+    explored = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+    pheromone = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+  }
+  function setWall(r, c, v = 1) {
+    if (r >= 0 && r < ROWS && c >= 0 && c < COLS) grid[r][c] = v;
+  }
+  function rect(r1, c1, r2, c2, v = 1) {
+    for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) setWall(r, c, v);
+  }
+  function border() {
+    rect(0, 0, 0, COLS - 1);
+    rect(ROWS - 1, 0, ROWS - 1, COLS - 1);
+    rect(0, 0, ROWS - 1, 0);
+    rect(0, COLS - 1, ROWS - 1, COLS - 1);
+  }
+
+  function makeAgent(x, y, opts = {}) {
+    return {
+      x, y, vx: 0, vy: 0,
+      goal: opts.goal || null,
+      path: [],
+      trail: [],
+      stuckTimer: 0,
+      prevX: x, prevY: y,
+      color: opts.color || null,
+      claimedFrontier: null,
+    };
+  }
+
+  // ---------- forces ----------
+  function wallRepulsion(x, y) {
+    let fx = 0, fy = 0;
+    const R = CELL * 2.8;
+    const cr = Math.floor(y / CELL), cc = Math.floor(x / CELL);
+    for (let dr = -3; dr <= 3; dr++) for (let dc = -3; dc <= 3; dc++) {
+      const r = cr + dr, c = cc + dc;
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+      if (grid[r][c] !== 1) continue;
+      const wx = c * CELL + CELL / 2, wy = r * CELL + CELL / 2;
+      const dx = x - wx, dy = y - wy, d = Math.hypot(dx, dy);
+      if (d < R && d > 0.5) {
+        const s = (R - d) / R;
+        fx += dx / d * s * 3.5;
+        fy += dy / d * s * 3.5;
+      }
+    }
+    return [fx, fy];
+  }
+  function goalAttraction(x, y, goal) {
+    if (!goal) return [0, 0];
+    const dx = goal.x - x, dy = goal.y - y, d = Math.hypot(dx, dy);
+    if (d < 3) return [0, 0];
+    return [dx / d * 1.8, dy / d * 1.8];
+  }
+  function agentRepulsion(a) {
+    let fx = 0, fy = 0;
+    const R = CELL * 1.6;
+    for (const o of agents) {
+      if (o === a) continue;
+      const dx = a.x - o.x, dy = a.y - o.y, d = Math.hypot(dx, dy);
+      if (d < R && d > 0.1) {
+        const s = (R - d) / R;
+        fx += dx / d * s * 2.5;
+        fy += dy / d * s * 2.5;
+      }
+    }
+    return [fx, fy];
+  }
+
+  // ---------- A* ----------
+  function astar(x0, y0, x1, y1) {
+    const sr = Math.floor(y0 / CELL), sc = Math.floor(x0 / CELL);
+    const gr = Math.floor(y1 / CELL), gc = Math.floor(x1 / CELL);
+    if (gr < 0 || gr >= ROWS || gc < 0 || gc >= COLS) return [];
+    if (grid[gr][gc] === 1) return [];
+    const h = (r, c) => Math.abs(r - gr) + Math.abs(c - gc);
+    const open = [{ r: sr, c: sc, g: 0, f: h(sr, sc), parent: null }];
+    const closed = new Set();
+    const key = (r, c) => r + ',' + c;
+    let iter = 0;
+    while (open.length && iter++ < 4000) {
+      let bi = 0;
+      for (let i = 1; i < open.length; i++) if (open[i].f < open[bi].f) bi = i;
+      const node = open.splice(bi, 1)[0];
+      if (node.r === gr && node.c === gc) {
+        const path = []; let cur = node;
+        while (cur) {
+          path.unshift({ x: cur.c * CELL + CELL / 2, y: cur.r * CELL + CELL / 2 });
+          cur = cur.parent;
+        }
+        return path;
+      }
+      closed.add(key(node.r, node.c));
+      for (const [dr, dc] of [[0,1],[0,-1],[1,0],[-1,0]]) {
+        const nr = node.r + dr, nc = node.c + dc;
+        if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+        if (grid[nr][nc] === 1 || closed.has(key(nr, nc))) continue;
+        let stigCost = 0;
+        if (currentScenario === 'stigmergy') stigCost = -pheromone[nr][nc] * 0.5;
+        open.push({ r: nr, c: nc, g: node.g + 1 + stigCost, f: node.g + 1 + stigCost + h(nr, nc), parent: node });
+      }
+    }
+    return [];
+  }
+
+  // ---------- frontier ----------
+  function findFrontiers() {
+    if (!showFog) return [];
+    const out = [];
+    for (let r = 1; r < ROWS - 1; r++) for (let c = 1; c < COLS - 1; c++) {
+      if (grid[r][c] === 1 || !explored[r][c]) continue;
+      const isFrontier = [[0,1],[0,-1],[1,0],[-1,0]].some(([dr, dc]) => {
+        const nr = r + dr, nc = c + dc;
+        return nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS &&
+               grid[nr][nc] === 0 && !explored[nr][nc];
+      });
+      if (isFrontier) out.push({ r, c, x: c * CELL + CELL / 2, y: r * CELL + CELL / 2 });
+    }
+    return out;
+  }
+  function updateFog() {
+    if (!showFog) return;
+    const R = 3;
+    agents.forEach(a => {
+      const cr = Math.floor(a.y / CELL), cc = Math.floor(a.x / CELL);
+      for (let dr = -R; dr <= R; dr++) for (let dc = -R; dc <= R; dc++) {
+        const r = cr + dr, c = cc + dc;
+        if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+        if (Math.hypot(dr, dc) <= R) explored[r][c] = true;
+      }
+    });
+  }
+
+  // ---------- agent update ----------
+  function updateAgents() {
+    const frontiers = findFrontiers();
+    const claimed = new Set();
+
+    agents.forEach(a => {
+      // FRONTIER scenario: assign each agent its nearest unclaimed frontier
+      if (showFog && frontiers.length) {
+        const fk = f => f.r + ',' + f.c;
+        const need = !a.claimedFrontier ||
+          claimed.has(fk(a.claimedFrontier)) ||
+          (explored[a.claimedFrontier.r] && explored[a.claimedFrontier.r][a.claimedFrontier.c]);
+        if (need) {
+          let best = null, bd = Infinity;
+          for (const f of frontiers) {
+            if (claimed.has(fk(f))) continue;
+            const d = Math.hypot(a.x - f.x, a.y - f.y);
+            if (d < bd) { bd = d; best = f; }
+          }
+          a.claimedFrontier = best;
+        }
+        if (a.claimedFrontier) {
+          claimed.add(a.claimedFrontier.r + ',' + a.claimedFrontier.c);
+          a.goal = a.claimedFrontier;
+        }
+      }
+
+      let fx = 0, fy = 0;
+      if (astarEnabled && a.goal) {
+        if (!a.path.length || Math.hypot(a.x - a.path[0].x, a.y - a.path[0].y) < CELL * 0.55) {
+          if (a.path.length) a.path.shift();
+          if (!a.path.length) {
+            a.path = astar(a.x, a.y, a.goal.x, a.goal.y);
+            if (a.path.length) a.path.shift();
+          }
+        }
+        if (a.path.length) {
+          const wp = a.path[0];
+          const dx = wp.x - a.x, dy = wp.y - a.y, d = Math.hypot(dx, dy);
+          if (d > 0.1) { fx += dx / d * 2.2; fy += dy / d * 2.2; }
+        }
+      } else if (a.goal) {
+        const [gx, gy] = goalAttraction(a.x, a.y, a.goal);
+        fx += gx; fy += gy;
+      }
+
+      const [wx, wy] = wallRepulsion(a.x, a.y);
+      const [ax2, ay2] = agentRepulsion(a);
+      fx += wx + ax2; fy += wy + ay2;
+
+      const MAX = 1.9;
+      const spd = Math.hypot(fx, fy);
+      if (spd > MAX) { fx = fx / spd * MAX; fy = fy / spd * MAX; }
+      a.vx = fx; a.vy = fy;
+
+      const nx = a.x + a.vx, ny = a.y + a.vy;
+      const nr = Math.floor(ny / CELL), nc = Math.floor(nx / CELL);
+      if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && grid[nr][nc] !== 1) {
+        a.x = nx; a.y = ny;
+      }
+
+      // Pheromone deposit (stigmergy)
+      if (currentScenario === 'stigmergy') {
+        const r = Math.floor(a.y / CELL), c = Math.floor(a.x / CELL);
+        if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+          pheromone[r][c] = Math.min(pheromone[r][c] + 0.18, 4);
+        }
+      }
+
+      if (tick % 3 === 0) { a.trail.push({ x: a.x, y: a.y }); if (a.trail.length > 70) a.trail.shift(); }
+      if (Math.hypot(a.x - a.prevX, a.y - a.prevY) < 0.12) a.stuckTimer++;
+      else a.stuckTimer = 0;
+      a.prevX = a.x; a.prevY = a.y;
+    });
+
+    // pheromone decay
+    if (currentScenario === 'stigmergy') {
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        pheromone[r][c] *= 0.995;
+      }
+    }
+  }
+
+  // ---------- scenarios ----------
+  function loadScenario(name) {
+    currentScenario = name;
+    makeGrid();
+    border();
+    agents = [];
+    goals = [];
+    showFog = false;
+    astarEnabled = false;
+
+    if (name === 'localminima') {
+      // U-shaped room: top, left, right walls — bottom open
+      const r1 = 4, c1 = 9, r2 = 16, c2 = 24;
+      rect(r1, c1, r1, c2);  // top
+      rect(r1, c1, r2, c1);  // left
+      rect(r1, c2, r2, c2);  // right
+      const goal = { x: 4 * CELL + CELL / 2, y: 8 * CELL + CELL / 2 };
+      goals = [goal];
+      const a = makeAgent(16 * CELL + CELL / 2, 10 * CELL + CELL / 2, { goal });
+      agents = [a];
+    }
+    else if (name === 'deadlock') {
+      const mid = Math.floor(COLS / 2);
+      const gapR = Math.floor(ROWS / 2);
+      for (let r = 1; r < ROWS - 1; r++) if (r < gapR - 1 || r > gapR + 1) setWall(r, mid);
+      const gL = { x: (mid + 8) * CELL + CELL / 2, y: gapR * CELL + CELL / 2 };
+      const gR = { x: (mid - 8) * CELL + CELL / 2, y: gapR * CELL + CELL / 2 };
+      goals = [gL, gR];
+      for (let i = 0; i < 4; i++) {
+        agents.push(makeAgent((mid - 6 - i) * CELL + CELL / 2, (gapR + (i % 3 - 1)) * CELL + CELL / 2, { goal: gL }));
+        agents.push(makeAgent((mid + 6 + i) * CELL + CELL / 2, (gapR + (i % 3 - 1)) * CELL + CELL / 2, { goal: gR }));
+      }
+    }
+    else if (name === 'frontier') {
+      showFog = true;
+      astarEnabled = true;
+      // some interior walls forming rooms
+      rect(6, 1, 6, 16); setWall(6, 9, 0); setWall(6, 10, 0);
+      rect(6, 20, 6, COLS - 2);
+      rect(13, 10, 13, COLS - 2); setWall(13, 22, 0);
+      rect(6, 10, 13, 10); setWall(10, 10, 0);
+      for (let i = 0; i < 6; i++) {
+        agents.push(makeAgent((2 + i % 3) * CELL + CELL / 2, (2 + Math.floor(i / 3)) * CELL + CELL / 2));
+      }
+      // seed top-left as explored
+      for (let r = 1; r < 5; r++) for (let c = 1; c < 10; c++) explored[r][c] = true;
+    }
+    else if (name === 'bottleneck') {
+      const mid = Math.floor(COLS / 2);
+      const gapR = Math.floor(ROWS / 2);
+      for (let r = 1; r < ROWS - 1; r++) if (r !== gapR) setWall(r, mid);
+      const goal = { x: (mid + 10) * CELL + CELL / 2, y: gapR * CELL + CELL / 2 };
+      goals = [goal];
+      for (let i = 0; i < 14; i++) {
+        const c = 2 + (i % 4) * 2, r = 2 + Math.floor(i / 4) * 4;
+        agents.push(makeAgent(c * CELL + CELL / 2, r * CELL + CELL / 2, { goal }));
+      }
+    }
+    else if (name === 'stigmergy') {
+      const mid = Math.floor(COLS / 2);
+      // wall with TWO gaps — long and short paths
+      for (let r = 1; r < ROWS - 1; r++) {
+        if (r !== 4 && r !== Math.floor(ROWS / 2)) setWall(r, mid);
+      }
+      const goal = { x: (mid + 10) * CELL + CELL / 2, y: Math.floor(ROWS / 2) * CELL + CELL / 2 };
+      goals = [goal];
+      for (let i = 0; i < 10; i++) {
+        const r = 4 + (i % 5) * 2, c = 2 + Math.floor(i / 5) * 2;
+        agents.push(makeAgent(c * CELL + CELL / 2, r * CELL + CELL / 2, { goal }));
+      }
+      astarEnabled = true;
+    }
+
+    syncSceneButtons();
+    syncLayerButtons();
+  }
+
+  function syncSceneButtons() {
+    document.querySelectorAll('.m4-scene-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.scene === currentScenario);
+    });
+  }
+  function syncLayerButtons() {
+    const map = [
+      ['m4-toggle-astar', astarEnabled, 'Enable A*', 'Disable A*'],
+      ['m4-toggle-forces', showForces, 'Show Forces', 'Hide Forces'],
+      ['m4-toggle-paths', showPaths, 'Hide A* Paths', 'Show A* Paths'],
+      ['m4-toggle-heat', showHeat, 'Heat Map', 'Hide Heat Map'],
+      ['m4-toggle-vo', showVO, 'Show VO Cones', 'Hide VO Cones'],
+    ];
+    map.forEach(([id, state, off, on]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('active', state);
+      el.textContent = state ? on : off;
+    });
+  }
+
+  // ---------- draw ----------
+  function drawArrow(x1, y1, x2, y2, color, w = 1) {
+    const dx = x2 - x1, dy = y2 - y1;
+    if (Math.hypot(dx, dy) < 2) return;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color; ctx.lineWidth = w; ctx.stroke();
+    const ang = Math.atan2(dy, dx), s = 5;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - s * Math.cos(ang - 0.4), y2 - s * Math.sin(ang - 0.4));
+    ctx.lineTo(x2 - s * Math.cos(ang + 0.4), y2 - s * Math.sin(ang + 0.4));
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, CW, CH);
+    if (showFog) { ctx.fillStyle = '#020408'; ctx.fillRect(0, 0, CW, CH); }
+
+    // heat map (sample wall potential field)
+    if (showHeat) {
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        if (grid[r][c] === 1) continue;
+        const px = c * CELL + CELL / 2, py = r * CELL + CELL / 2;
+        const [fx, fy] = wallRepulsion(px, py);
+        const m = Math.min(Math.hypot(fx, fy) / 8, 1);
+        ctx.fillStyle = `rgba(${Math.round(180 * m)}, ${Math.round(60 * (1 - m))}, ${Math.round(180 * (1 - m))}, ${0.18 + 0.25 * m})`;
+        ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+      }
+    }
+
+    // pheromone overlay
+    if (currentScenario === 'stigmergy') {
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        if (pheromone[r][c] > 0.05) {
+          const a = Math.min(pheromone[r][c] / 4, 1) * 0.6;
+          ctx.fillStyle = `rgba(249, 150, 50, ${a})`;
+          ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+        }
+      }
+    }
+
+    // grid cells
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const vis = !showFog || explored[r][c];
+      const x = c * CELL, y = r * CELL;
+      if (grid[r][c] === 1 && vis) {
+        ctx.fillStyle = '#1a2535'; ctx.fillRect(x, y, CELL, CELL);
+        ctx.strokeStyle = '#2a3545'; ctx.lineWidth = 0.5; ctx.strokeRect(x, y, CELL, CELL);
+      } else if (vis) {
+        ctx.strokeStyle = 'rgba(30,42,69,0.25)';
+        ctx.lineWidth = 0.3;
+        ctx.strokeRect(x, y, CELL, CELL);
+      }
+    }
+
+    // frontier cells
+    if (showFog) {
+      findFrontiers().forEach(f => {
+        ctx.fillStyle = 'rgba(249,212,110,0.18)';
+        ctx.fillRect(f.c * CELL, f.r * CELL, CELL, CELL);
+        ctx.strokeStyle = 'rgba(249,212,110,0.5)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(f.c * CELL, f.r * CELL, CELL, CELL);
+      });
+    }
+
+    // goals
+    goals.forEach(g => {
+      ctx.beginPath(); ctx.arc(g.x, g.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(110,249,176,0.13)'; ctx.fill();
+      ctx.strokeStyle = '#6ef9b0'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(g.x - 6, g.y); ctx.lineTo(g.x + 6, g.y);
+      ctx.moveTo(g.x, g.y - 6); ctx.lineTo(g.x, g.y + 6);
+      ctx.strokeStyle = '#6ef9b0'; ctx.lineWidth = 1; ctx.stroke();
+    });
+
+    // trails
+    agents.forEach((a, i) => {
+      if (a.trail.length < 2) return;
+      const hue = (i * 53) % 360;
+      ctx.beginPath(); ctx.moveTo(a.trail[0].x, a.trail[0].y);
+      a.trail.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = `hsla(${hue},60%,55%,0.12)`;
+      ctx.lineWidth = 1.5; ctx.setLineDash([]); ctx.stroke();
+    });
+
+    // A* paths
+    if (showPaths && astarEnabled) {
+      agents.forEach((a, i) => {
+        if (!a.path.length) return;
+        const hue = (i * 53) % 360;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y);
+        a.path.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.strokeStyle = `hsla(${hue},80%,65%,0.55)`;
+        ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+        ctx.stroke(); ctx.setLineDash([]);
+      });
+    }
+
+    // VO cones
+    if (showVO) {
+      agents.forEach(a => {
+        agents.forEach(b => {
+          if (a === b) return;
+          const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+          if (d > CELL * 3 || d < 1) return;
+          const ang = Math.atan2(dy, dx);
+          const wd = Math.atan2(CELL * 0.7, d);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.arc(a.x, a.y, CELL * 3, ang - wd, ang + wd);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(192,160,240,0.10)';
+          ctx.fill();
+        });
+      });
+    }
+
+    // force vectors
+    if (showForces) {
+      agents.forEach(a => {
+        const sc = 12;
+        const [wx, wy] = wallRepulsion(a.x, a.y);
+        const [ax2, ay2] = agentRepulsion(a);
+        drawArrow(a.x, a.y, a.x + wx * sc, a.y + wy * sc, 'rgba(249,124,110,0.85)', 1.5);
+        if (Math.hypot(ax2, ay2) > 0.1)
+          drawArrow(a.x, a.y, a.x + ax2 * sc, a.y + ay2 * sc, 'rgba(249,212,110,0.85)', 1.5);
+        if (a.goal) {
+          const [gx, gy] = goalAttraction(a.x, a.y, a.goal);
+          drawArrow(a.x, a.y, a.x + gx * sc, a.y + gy * sc, 'rgba(110,249,176,0.85)', 1.5);
+        }
+      });
+    }
+
+    // agents
+    agents.forEach((a, i) => {
+      const stuck = a.stuckTimer > 80;
+      const hue = (i * 53) % 360;
+      if (stuck) {
+        const p = 0.4 + 0.4 * Math.sin(tick * 0.12);
+        ctx.beginPath(); ctx.arc(a.x, a.y, CELL * 0.75, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(249,124,110,${p})`; ctx.lineWidth = 2; ctx.stroke();
+      }
+      ctx.beginPath(); ctx.arc(a.x, a.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = stuck ? '#f97c6e' : `hsl(${hue},70%,62%)`;
+      ctx.fill();
+      ctx.strokeStyle = stuck ? '#c03030' : `hsl(${hue},50%,42%)`;
+      ctx.lineWidth = 1.5; ctx.stroke();
+      const sp = Math.hypot(a.vx, a.vy);
+      if (sp > 0.15)
+        drawArrow(a.x, a.y, a.x + a.vx * 7, a.y + a.vy * 7,
+          stuck ? '#f97c6e' : `hsl(${hue},70%,62%)`, 1);
+    });
+
+    // stats
+    const stuck = agents.filter(a => a.stuckTimer > 80).length;
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('m4-scenario', SCENARIOS[currentScenario]?.label || currentScenario);
+    set('m4-agents', agents.length);
+    set('m4-stuck', stuck);
+    set('m4-moving', agents.length - stuck);
+    if (showFog) {
+      let total = 0, ex = 0;
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        if (grid[r][c] !== 1) { total++; if (explored[r][c]) ex++; }
+      }
+      set('m4-explored', Math.round(ex / total * 100) + '%');
+    } else {
+      set('m4-explored', 'N/A');
+    }
+  }
+
+  function loop() {
+    animId = requestAnimationFrame(loop);
+    if (paused) return;
+    tick++;
+    updateFog();
+    updateAgents();
+    draw();
+  }
+
+  function init() {
+    canvas = document.getElementById('m4-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    loadScenario('localminima');
+
+    document.querySelectorAll('.m4-scene-btn').forEach(btn => {
+      btn.addEventListener('click', () => loadScenario(btn.dataset.scene));
+    });
+
+    document.getElementById('m4-toggle-astar')?.addEventListener('click', () => {
+      astarEnabled = !astarEnabled;
+      agents.forEach(a => a.path = []);
+      syncLayerButtons();
+    });
+    document.getElementById('m4-toggle-forces')?.addEventListener('click', () => {
+      showForces = !showForces; syncLayerButtons();
+    });
+    document.getElementById('m4-toggle-paths')?.addEventListener('click', () => {
+      showPaths = !showPaths; syncLayerButtons();
+    });
+    document.getElementById('m4-toggle-heat')?.addEventListener('click', () => {
+      showHeat = !showHeat; syncLayerButtons();
+    });
+    document.getElementById('m4-toggle-vo')?.addEventListener('click', () => {
+      showVO = !showVO; syncLayerButtons();
+    });
+    document.getElementById('m4-pause')?.addEventListener('click', () => {
+      paused = !paused;
+      const b = document.getElementById('m4-pause');
+      if (b) b.textContent = paused ? 'Resume' : 'Pause';
+    });
+    document.getElementById('m4-reset')?.addEventListener('click', () => {
+      loadScenario(currentScenario);
+      paused = false;
+      const b = document.getElementById('m4-pause');
+      if (b) b.textContent = 'Pause';
+    });
+
+    if (animId) cancelAnimationFrame(animId);
+    loop();
+  }
+
+  return { init };
+})();
+/* ============================================================
+   GLOSSARY SEARCH
+   ============================================================ */
+(function initGlossary() {
+  const searchEl = document.getElementById('gloss-search');
+  if (!searchEl) return;
+  searchEl.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.gloss-card').forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(q) ? '' : 'none';
+    });
+  });
+})();
+
+/* ============================================================
+   THEORY PANELS (collapsible)
+   ============================================================ */
+(function initTheoryPanels() {
+  document.querySelectorAll('.theory-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const panel = header.parentElement;
+      const body = panel.querySelector('.theory-body');
+      const arrow = header.querySelector('.theory-arrow');
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
+    });
+  });
+})();
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+(function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.target || btn.dataset.tab;
+      const pane = document.getElementById('tab-' + target);
+      if (pane) pane.classList.add('active');
+    });
+  });
+})();
+
+/* ============================================================
+   BOOT — run after DOM is ready
+   ============================================================ */
+(function boot() {
+  function tryInit() {
+    if (document.getElementById('m3-canvas')) M3.init();
+    if (document.getElementById('m4-canvas')) M4.init();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryInit);
+  } else {
+    tryInit();
+  }
+})();
+</script>
+</body>
+</html>
