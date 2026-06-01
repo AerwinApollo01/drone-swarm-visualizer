@@ -1,22 +1,31 @@
 # Drone Swarm Visualizer
 
-Interactive educational visualizer for swarm intelligence and distributed coordination. Built as a companion to a self-paced curriculum covering five modules: architecture, emergent behavior, mesh networking, path planning, and real-world applications.
+Interactive educational visualizer paired with a self-paced curriculum on swarm intelligence, distributed coordination, and counter-UAS (C-UAS) defense. Built as a Socratic learning companion — every module pairs theory with a live, controllable simulation.
 
 **Live demo:** https://aerwinapollo01.github.io/drone-swarm-visualizer/
 
-## What's inside
+## Curriculum
 
-Five tabs, all running live in the browser with zero dependencies:
+The visualizer follows two interlocking curricula. The first teaches how drone swarms work; the second teaches how to defend against them. By design, every architectural choice that makes a swarm robust (Modules 1-5) becomes a defensive problem (C-UAS Modules) — the two curricula illuminate each other.
 
-- **Module 1 — Architecture.** Side-by-side centralized vs. decentralized swarms. Kill the controller or random drones and watch SPOF cascade failure vs. mesh self-healing in real time. Includes live latency and bandwidth meters.
-- **Module 2 — Boids.** Reynolds' three-rule flocking algorithm with live sliders for separation/alignment/cohesion weights and radii. Click any boid to inspect its per-frame force breakdown. Toggle between metric and topological neighbor sensing (starlings use the latter).
-- **Module 3 — Mesh & Gossip.** Mesh networking with realistic signal attenuation (link strength fades inverse-square with distance). Inject true detections, false positives, and false no-fly zones to see how quorum-based gossip propagates and self-corrects (or doesn't). Hidden-node demo and partition/relay scenarios included.
-- **Module 4 — Path Planning.** Five curriculum scenarios: local minima trap, doorway deadlock, frontier exploration with fog of war, bottleneck traffic, and stigmergy/pheromone coordination. Toggle A*, force vectors, potential field heat map, and velocity-obstacle cones.
-- **Glossary.** 30 searchable terms from across the modules.
+### Part I — Swarm Intelligence
+
+- **Module 1 — Architecture.** Side-by-side centralized vs. decentralized swarms. Kill the controller or random drones and watch SPOF cascade failure vs. mesh self-healing in real time. Live latency and bandwidth meters illustrate O(N) vs. O(k) scaling.
+- **Module 2 — Boids.** Reynolds' three-rule flocking algorithm with live sliders for separation/alignment/cohesion weights and radii. Click any boid to inspect its per-frame force breakdown. Toggle between metric and topological (k=7) neighbor sensing — the trick starlings use.
+- **Module 3 — Mesh & Gossip.** Mesh networking with realistic signal attenuation (link strength fades inverse-square with distance). Inject true detections, false positives, and false no-fly zones to see how quorum-based gossip propagates and self-corrects (or doesn't). Hidden-node, partition, and relay scenarios included.
+- **Module 4 — Path Planning.** Five scenarios drawn directly from the curriculum: local minima trap, doorway deadlock, frontier exploration with fog of war, bottleneck traffic, and stigmergy/pheromone coordination. Toggle A*, force vectors, potential field heat map, and velocity-obstacle cones.
+
+### Part II — Counter-UAS
+
+- **C-UAS 1 — Kill Chain.** Interactive layered-defense simulator. A drone approaches a defended asset; the user toggles four defensive layers (Outer 5 km · Middle 3 km · Inner 1 km · Terminal 200 m) and adjusts drone speed (10-120 m/s). Watch the five-stage kill chain (Detect → Track → Identify → Decide → Engage) race the clock. Fast drones + missing layers = IMPACT; full layered defense + slower threats = DEFENDED. Designed to make "time is the hidden constraint" visceral rather than abstract.
+
+### Reference
+
+- **Glossary.** 35+ searchable terms spanning both curricula, with module tags.
 
 ## Stack
 
-Single `index.html` file. Vanilla JS, Canvas 2D API, no build step, no dependencies.
+Single `index.html` file. Vanilla JS, Canvas 2D API, no build step, no npm dependencies, no external network calls. ~3,800 lines, deploys as static HTML.
 
 ## Running locally
 
@@ -24,4 +33,8 @@ Single `index.html` file. Vanilla JS, Canvas 2D API, no build step, no dependenc
 npx serve .
 ```
 
-Then open http://localhost:3000.
+Then open the URL printed in the terminal.
+
+## Pedagogical approach
+
+The simulations are not demos — they are diagnostic tools. Each module asks you to predict what will happen before you press the button, then shows you whether you were right. Failure scenarios are first-class: the goal is to develop the engineering intuition for what breaks, not just admire what works.
