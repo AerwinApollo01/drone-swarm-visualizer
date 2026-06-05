@@ -18,6 +18,7 @@ The visualizer follows two interlocking curricula. The first teaches how drone s
 ### Part II — Counter-UAS
 
 - **C-UAS 1 — Kill Chain.** Interactive layered-defense simulator. A drone approaches a defended asset; the user toggles four defensive layers (Outer 5 km · Middle 3 km · Inner 1 km · Terminal 200 m) and adjusts drone speed (10-120 m/s). Watch the five-stage kill chain (Detect → Track → Identify → Decide → Engage) race the clock. Fast drones + missing layers = IMPACT; full layered defense + slower threats = DEFENDED. Designed to make "time is the hidden constraint" visceral rather than abstract.
+- **C-UAS 2 — Detection & Tracking.** Sensor fusion simulator with all four sensor types — Radar, RF, Acoustic, EO/IR — each drawn as a live coverage ring whose effective range collapses or expands based on the selected drone profile and environment. Five drone profiles (Consumer, FPV, Autonomous, Hovering, Stealth) and three environment sliders (Wind, Urban Clutter, Thermal Noise) reveal the catastrophic blind spots: switch to Autonomous and watch RF go BLIND; switch to Hovering and watch radar collapse from the Doppler problem; crank wind to kill acoustic. A fusion-confidence bar shows how multi-sensor agreement raises certainty.
 
 ### Reference
 
