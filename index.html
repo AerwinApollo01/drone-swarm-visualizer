@@ -1041,6 +1041,153 @@
       transition: width 0.25s, background 0.25s;
       border-radius: 4px;
     }
+
+    /* ============================================================
+       C-UAS MODULE 3 — IDENTIFICATION & DECISION
+    ============================================================ */
+    .cuas3-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 280px;
+      gap: 16px;
+      align-items: start;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) {
+      .cuas3-layout { grid-template-columns: 1fr; }
+    }
+    .cuas3-sidebar, .cuas3-rightbar {
+      display: flex; flex-direction: column; gap: 10px; min-width: 0;
+    }
+    .cuas3-canvas-wrap {
+      min-width: 0;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+    .cuas3-canvas-wrap canvas {
+      width: 100%; height: auto; display: block; border-radius: 4px;
+    }
+
+    .scenario-btn {
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 0.12s;
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+    .scenario-btn .scen-desc {
+      display: block;
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      letter-spacing: 0.03em;
+    }
+    .scenario-btn:hover { border-color: var(--blue); }
+    .scenario-btn.active {
+      border-color: var(--yellow);
+      background: rgba(249,212,110,0.08);
+      color: var(--yellow);
+    }
+    .scenario-btn.active .scen-desc { color: rgba(249,212,110,0.7); }
+
+    .authority-badge {
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      font-size: 11px;
+      text-align: center;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+    .authority-badge.full   { border-color: var(--green); color: var(--green); background: rgba(110,249,176,0.08); }
+    .authority-badge.partial { border-color: var(--yellow); color: var(--yellow); background: rgba(249,212,110,0.08); }
+    .authority-badge.none   { border-color: var(--red); color: var(--red); background: rgba(249,124,110,0.08); }
+
+    .signal-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      border-radius: var(--radius);
+      font-size: 10px;
+    }
+    .signal-row .signal-label {
+      flex: 1; color: var(--text);
+    }
+    .signal-row .signal-val {
+      font-weight: bold; font-size: 10px;
+      min-width: 36px; text-align: right;
+    }
+    .signal-row.suspicious { border-left-color: var(--red); }
+    .signal-row.benign     { border-left-color: var(--green); }
+    .signal-row.neutral    { border-left-color: var(--blue); }
+    .signal-row.unknown    { border-left-color: var(--text-dim); opacity: 0.6; }
+
+    .roe-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .roe-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 9px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.12s;
+      font-family: var(--font);
+      color: var(--text);
+      text-align: left;
+    }
+    .roe-btn:not(:disabled):hover { border-color: var(--blue); background: rgba(126,184,247,0.05); }
+    .roe-btn:disabled, .roe-btn.locked {
+      cursor: not-allowed;
+      opacity: 0.45;
+      background: var(--bg-base);
+    }
+    .roe-btn .roe-name {
+      font-size: 11px; font-weight: bold; letter-spacing: 0.04em;
+    }
+    .roe-btn .roe-req {
+      font-size: 9px; color: var(--text-dim); margin-top: 2px;
+    }
+    .roe-btn.done { border-left-color: var(--green); }
+    .roe-btn.done .roe-name { color: var(--green); }
+    .roe-btn.locked { border-left-color: var(--red); }
+    .roe-btn.locked .roe-name { text-decoration: line-through; color: var(--red); }
+    .roe-btn.locked .roe-req::before { content: "🔒 "; }
+
+    .decision-clock {
+      padding: 10px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-align: center;
+    }
+    .decision-clock .clock-label {
+      font-size: 9px; color: var(--text-dim); letter-spacing: 0.06em;
+    }
+    .decision-clock .clock-value {
+      font-size: 22px; font-weight: bold; font-family: var(--font);
+      color: var(--green); margin-top: 2px;
+    }
+    .decision-clock.warn .clock-value  { color: var(--yellow); }
+    .decision-clock.crit .clock-value  { color: var(--red); }
     .gloss-card {
       background: var(--bg-panel);
       border: 1px solid var(--border);
@@ -1690,6 +1837,7 @@
   <nav class="subtab-nav" role="tablist" aria-label="C-UAS modules">
     <button class="subtab-btn active" role="tab" data-target="cuas1">C-UAS 1 &mdash; Kill Chain</button>
     <button class="subtab-btn"        role="tab" data-target="cuas2">C-UAS 2 &mdash; Detection &amp; Tracking</button>
+    <button class="subtab-btn"        role="tab" data-target="cuas3">C-UAS 3 &mdash; Identification &amp; Decision</button>
   </nav>
 
 <!-- C-UAS MODULE 1 — KILL CHAIN -->
@@ -1910,6 +2058,145 @@
 
       <div class="info-bar" style="font-size:10px;">
         Switch profile to <strong>Autonomous</strong> &mdash; watch RF go BLIND. Switch to <strong>Hovering</strong> &mdash; watch radar collapse. Push <strong>Wind</strong> to 100% &mdash; acoustic dies. Stealth + bad environment &mdash; nothing detects.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- C-UAS MODULE 3 — IDENTIFICATION & DECISION -->
+<div id="tab-cuas3" class="tab-pane">
+
+  <details class="theory-panel">
+    <summary>Core Theory &mdash; Where Law Eats Engineering</summary>
+    <div class="theory-body">
+      <div class="theory-item">
+        <span class="theory-term">Three Identification Questions</span>
+        <span class="theory-def">(1) What is it? (2) Whose is it? (3) What is it doing? Classifiers answer #1 well, #2 partially via Remote ID, #3 mostly via behavioral inference.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Remote ID (FAA Part 89)</span>
+        <span class="theory-def">Mandatory broadcast of drone serial, GPS, operator location, since March 2024. Useful for filtering legitimate traffic; useless against threats (they simply don't broadcast).</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Authority Layer</span>
+        <span class="theory-def">In the US, only DoD / DHS / DoJ / DoE can lawfully defeat drones, and only at specific facilities. Stadium operators, private security, and local police generally cannot.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">18 U.S.C. &sect; 32</span>
+        <span class="theory-def">Federal criminal statute — destruction of aircraft. Drones count as aircraft for this purpose. Up to 20 years federal prison for unauthorized engagement.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">47 U.S.C. &sect; 301 / FCC Rules</span>
+        <span class="theory-def">RF jammers are per se illegal for non-authorized parties. Operation is itself a crime — does not require any drone to be hit.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">ROE Escalation</span>
+        <span class="theory-def">Observe → Warn → Non-Kinetic → Kinetic. Each step requires escalating authority. Chain latency frequently exceeds engagement window against fast threats.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">The Four Failure Modes</span>
+        <span class="theory-def">(1) False Positive (engage benign), (2) False Negative (miss threat), (3) Decision Latency Collapse (correct call too slow), (4) Authority Failure (no legal right to act).</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="cuas3-layout">
+
+    <!-- LEFT SIDEBAR — Scenario + Authority -->
+    <div class="cuas3-sidebar">
+      <div class="sidebar-section-title">Scenario</div>
+      <button class="scenario-btn active" data-scenario="hostile-dod">
+        Hostile Drone (you are DoD)
+        <span class="scen-desc">Full authority. Should win if you act in time.</span>
+      </button>
+      <button class="scenario-btn" data-scenario="hostile-airport">
+        Same Threat &mdash; you are Airport Security
+        <span class="scen-desc">Authority gate triggers. Cannot lawfully engage.</span>
+      </button>
+      <button class="scenario-btn" data-scenario="benign-dod">
+        Ambiguous Drone (you are DoD)
+        <span class="scen-desc">Could be hostile, could be a journalist. Trust your sensors?</span>
+      </button>
+      <button class="scenario-btn" data-scenario="spoofed-dod">
+        Spoofed Remote ID (you are DoD)
+        <span class="scen-desc">Hostile drone broadcasts a fake registered ID. Adversarial.</span>
+      </button>
+
+      <div class="sidebar-section-title">Your Authority</div>
+      <div id="c3-authority" class="authority-badge full">DoD &mdash; FULL</div>
+
+      <div class="sidebar-section-title">Controls</div>
+      <button id="c3-launch" class="ctrl-btn ctrl-btn--green">Launch Threat</button>
+      <button id="c3-pause" class="ctrl-btn">Pause</button>
+      <button id="c3-reset" class="ctrl-btn">Reset</button>
+    </div>
+
+    <!-- CENTER CANVAS -->
+    <div class="cuas3-canvas-wrap">
+      <canvas id="cuas3-canvas" width="600" height="480"></canvas>
+    </div>
+
+    <!-- RIGHT SIDEBAR — Identification stack + ROE -->
+    <div class="cuas3-rightbar">
+
+      <div class="sidebar-section-title">Identification Signals</div>
+      <div class="signal-row unknown" id="c3-sig-track">
+        <span class="signal-label">Track Quality</span>
+        <span class="signal-val" id="c3-sig-track-val">&mdash;</span>
+      </div>
+      <div class="signal-row unknown" id="c3-sig-remoteid">
+        <span class="signal-label">Remote ID</span>
+        <span class="signal-val" id="c3-sig-remoteid-val">&mdash;</span>
+      </div>
+      <div class="signal-row unknown" id="c3-sig-classifier">
+        <span class="signal-label">Classifier</span>
+        <span class="signal-val" id="c3-sig-classifier-val">&mdash;</span>
+      </div>
+      <div class="signal-row unknown" id="c3-sig-behavior">
+        <span class="signal-label">Behavior</span>
+        <span class="signal-val" id="c3-sig-behavior-val">&mdash;</span>
+      </div>
+
+      <div class="fusion-bar-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:10px;">
+          <span>HOSTILE CONFIDENCE</span>
+          <span id="c3-fusion-text">0%</span>
+        </div>
+        <div class="fusion-bar-track">
+          <div id="c3-fusion-bar" class="fusion-bar-fill"></div>
+        </div>
+      </div>
+
+      <div class="sidebar-section-title">ROE Escalation</div>
+      <div class="roe-grid">
+        <button id="c3-roe-observe" class="roe-btn done">
+          <span class="roe-name">1. OBSERVE</span>
+          <span class="roe-req">Required: Sensor Operator &middot; auto-active</span>
+        </button>
+        <button id="c3-roe-warn" class="roe-btn" disabled>
+          <span class="roe-name">2. WARN</span>
+          <span class="roe-req">Required: C-UAS Supervisor</span>
+        </button>
+        <button id="c3-roe-nonkinetic" class="roe-btn" disabled>
+          <span class="roe-name">3. NON-KINETIC (jam / spoof)</span>
+          <span class="roe-req">Required: Site Commander</span>
+        </button>
+        <button id="c3-roe-kinetic" class="roe-btn" disabled>
+          <span class="roe-name">4. KINETIC (intercept)</span>
+          <span class="roe-req">Required: Higher Echelon</span>
+        </button>
+      </div>
+
+      <div id="c3-clock" class="decision-clock">
+        <div class="clock-label">TIME TO IMPACT</div>
+        <div class="clock-value" id="c3-clock-val">&mdash; s</div>
+      </div>
+
+      <div id="c3-outcome" class="outcome-box">AWAITING THREAT</div>
+
+      <div class="info-bar" style="font-size:10px;">
+        Each ROE step takes <strong>~2 seconds</strong> of approval latency once clicked. Authority-locked steps cannot be unlocked &mdash; you must work within your role. Watch for AUTHORITY FAIL when your role can't reach the action required.
       </div>
     </div>
 
@@ -2212,6 +2499,46 @@
         <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C1</span>
       </div>
       <p class="gloss-def">Attacker chooses when, where, and how many; defender must be ready everywhere, always, for any combination. Permanent asymmetry, not an engineering problem.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Remote ID</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C3</span>
+      </div>
+      <p class="gloss-def">FAA Part 89 mandatory broadcast (since March 2024): drone serial, GPS, operator location. Filters legitimate traffic; useless against threats that simply don't broadcast.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">18 U.S.C. § 32</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C3</span>
+      </div>
+      <p class="gloss-def">Federal criminal statute: destruction of aircraft. Drones count as aircraft. Up to 20 years federal prison for unauthorized drone engagement.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Rules of Engagement (ROE)</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C3</span>
+      </div>
+      <p class="gloss-def">Escalation chain: Observe → Warn → Non-Kinetic → Kinetic. Each step requires escalating authority. Chain latency frequently exceeds the available engagement window.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Authority Layer</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C3</span>
+      </div>
+      <p class="gloss-def">In the US, only DoD / DHS / DoJ / DoE can lawfully defeat drones, and only at specific facilities. Local police, private security, and infrastructure owners generally cannot.</p>
+    </div>
+
+    <div class="gloss-card" data-modules="C3">
+      <div class="gloss-card-header">
+        <span class="gloss-term">Alarm Fatigue</span>
+        <span class="gloss-badge" style="background:rgba(249,124,110,0.18); color:#f97c6e;">C3</span>
+      </div>
+      <p class="gloss-def">When false positives outnumber real threats, operators dismiss alerts as noise. A 95% classifier with high traffic produces dozens of false positives per day, killing operator vigilance.</p>
     </div>
 
   </div>
@@ -4824,6 +5151,413 @@ const C2 = (() => {
 })();
 
 /* ============================================================
+   C-UAS MODULE 3 — IDENTIFICATION & DECISION
+   ============================================================ */
+const C3 = (() => {
+  const W = 600, H = 480;
+  const CX = W / 2, CY = H / 2;
+  const M_PER_PX = 1000 / 44;
+  const PX_PER_M = 1 / M_PER_PX;
+
+  // ROE stages — each step has approval latency in seconds.
+  const ROE = [
+    { id: 'observe',    name: 'OBSERVE',     latency: 0,   req: 0 },
+    { id: 'warn',       name: 'WARN',        latency: 1.5, req: 1 },
+    { id: 'nonkinetic', name: 'NON-KINETIC', latency: 2.5, req: 2 },
+    { id: 'kinetic',    name: 'KINETIC',     latency: 3.0, req: 3 },
+  ];
+
+  // Authority level → max ROE step you may authorize
+  // 0=observe, 1=warn, 2=non-kinetic, 3=kinetic
+  const AUTHORITY = {
+    dod:        { name: 'DoD — FULL',                badge: 'full',    cap: 3 },
+    airport:    { name: 'Airport Security — NONE',   badge: 'none',    cap: 1 },
+  };
+
+  // Scenarios: ground truth + signal profile
+  const SCENARIOS = {
+    'hostile-dod': {
+      truth: 'HOSTILE', authority: 'dod', speed: 35,
+      signals: {
+        track:       { final: 90, label: 'High', cls: 'neutral' },
+        remoteid:    { final: 0,  label: 'NONE — suspicious', cls: 'suspicious' },
+        classifier:  { final: 92, label: 'Group 1 drone (92%)', cls: 'neutral' },
+        behavior:    { final: 88, label: 'Attack profile', cls: 'suspicious' },
+      },
+      fusionTarget: 88,
+    },
+    'hostile-airport': {
+      truth: 'HOSTILE', authority: 'airport', speed: 35,
+      signals: {
+        track:       { final: 90, label: 'High', cls: 'neutral' },
+        remoteid:    { final: 0,  label: 'NONE — suspicious', cls: 'suspicious' },
+        classifier:  { final: 92, label: 'Group 1 drone (92%)', cls: 'neutral' },
+        behavior:    { final: 88, label: 'Attack profile', cls: 'suspicious' },
+      },
+      fusionTarget: 88,
+    },
+    'benign-dod': {
+      truth: 'BENIGN', authority: 'dod', speed: 22,
+      signals: {
+        track:       { final: 75, label: 'Moderate', cls: 'neutral' },
+        remoteid:    { final: 95, label: 'Registered (N-12345)', cls: 'benign' },
+        classifier:  { final: 84, label: 'Group 1 drone (84%)', cls: 'neutral' },
+        behavior:    { final: 30, label: 'Transit pattern', cls: 'benign' },
+      },
+      fusionTarget: 35,  // low — should NOT engage
+    },
+    'spoofed-dod': {
+      truth: 'HOSTILE', authority: 'dod', speed: 30,
+      signals: {
+        track:       { final: 85, label: 'High', cls: 'neutral' },
+        remoteid:    { final: 90, label: 'Registered (spoofed?)', cls: 'benign' },
+        classifier:  { final: 92, label: 'Group 1 drone (92%)', cls: 'neutral' },
+        behavior:    { final: 60, label: 'Loitering (recon?)', cls: 'suspicious' },
+      },
+      fusionTarget: 55,  // intentionally ambiguous
+    },
+  };
+
+  let canvas, ctx, animId = null;
+  let drone = null;
+  let outcome = null;
+  let timer = 0;
+  let lastFrame = 0;
+  let paused = false;
+  let currentScenario = 'hostile-dod';
+
+  // ROE state: how far has the operator progressed
+  // -1 = nothing yet, 0=observe done, 1=warn done, 2=nonkinetic done, 3=kinetic done
+  let roeStep = 0;     // observe is auto-done
+  let roeInProgress = -1; // index of step currently being approved (in latency)
+  let roeProgressStart = 0;
+
+  function currentSignalValues(elapsed) {
+    // Signals ramp up linearly over first 4 seconds
+    const t = Math.min(elapsed / 4, 1);
+    const sc = SCENARIOS[currentScenario];
+    const result = {};
+    for (const key in sc.signals) {
+      const s = sc.signals[key];
+      result[key] = { val: Math.round(s.final * t), label: t > 0.3 ? s.label : 'building...', cls: t > 0.3 ? s.cls : 'unknown' };
+    }
+    return result;
+  }
+
+  function currentFusion(elapsed) {
+    const sc = SCENARIOS[currentScenario];
+    const t = Math.min(elapsed / 4, 1);
+    return Math.round(sc.fusionTarget * t);
+  }
+
+  function reset() {
+    drone = null;
+    outcome = null;
+    timer = 0;
+    roeStep = 0;
+    roeInProgress = -1;
+    updateUI();
+  }
+
+  function launch() {
+    const angle = Math.random() * Math.PI * 2;
+    const startR = 235;
+    drone = {
+      x: CX + Math.cos(angle) * startR,
+      y: CY + Math.sin(angle) * startR,
+    };
+    outcome = null;
+    timer = 0;
+    roeStep = 0;
+    roeInProgress = -1;
+  }
+
+  function update(dt) {
+    if (!drone || outcome || paused) return;
+    timer += dt;
+
+    const sc = SCENARIOS[currentScenario];
+    const dx = CX - drone.x, dy = CY - drone.y;
+    const distPx = Math.hypot(dx, dy);
+
+    // Move drone toward asset
+    const pxPerSec = sc.speed * PX_PER_M;
+    drone.x += (dx / distPx) * pxPerSec * dt;
+    drone.y += (dy / distPx) * pxPerSec * dt;
+
+    // Impact check
+    if (distPx < mToPx(100)) {
+      if (sc.truth === 'HOSTILE') outcome = 'IMPACT — drone reached asset';
+      else outcome = 'NO HARM — drone transited (was benign)';
+      return;
+    }
+
+    // Process ROE progress if a step is being approved
+    if (roeInProgress >= 0) {
+      const elapsedInStep = timer - roeProgressStart;
+      if (elapsedInStep >= ROE[roeInProgress].latency) {
+        roeStep = roeInProgress;
+        roeInProgress = -1;
+        // If the just-completed step is non-kinetic or kinetic, resolve outcome
+        if (roeStep === 2 || roeStep === 3) {
+          if (sc.truth === 'HOSTILE') outcome = 'DEFENDED — threat neutralized';
+          else outcome = 'FALSE POSITIVE — engaged a benign drone';
+          return;
+        }
+      }
+    }
+  }
+
+  function mToPx(m) { return m * PX_PER_M; }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // grid
+    ctx.strokeStyle = 'rgba(30,42,69,0.3)';
+    ctx.lineWidth = 0.5;
+    for (let g = 0; g < W; g += 44) {
+      ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, H); ctx.stroke();
+    }
+    for (let g = 0; g < H; g += 44) {
+      ctx.beginPath(); ctx.moveTo(0, g); ctx.lineTo(W, g); ctx.stroke();
+    }
+
+    // Asset
+    ctx.fillStyle = '#f9d46e';
+    ctx.fillRect(CX - 9, CY - 9, 18, 18);
+    ctx.strokeStyle = '#c8a23d';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(CX - 9, CY - 9, 18, 18);
+    ctx.fillStyle = '#0a0e1a';
+    ctx.font = 'bold 9px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('A', CX, CY + 3);
+
+    // ROE radius rings (visual progress through stages)
+    const radii = [220, 170, 110, 60];
+    const stageLabels = ['SENSORS', 'TRACKED', 'WARN ZONE', 'TERMINAL'];
+    radii.forEach((r, i) => {
+      ctx.beginPath();
+      ctx.arc(CX, CY, r, 0, Math.PI * 2);
+      ctx.strokeStyle = i <= roeStep ? 'rgba(110,249,176,0.5)' : 'rgba(80,80,80,0.25)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Drone
+    if (drone) {
+      const dx = CX - drone.x, dy = CY - drone.y;
+      const dist = Math.hypot(dx, dy);
+
+      ctx.beginPath();
+      ctx.moveTo(drone.x - (dx/dist)*30, drone.y - (dy/dist)*30);
+      ctx.lineTo(drone.x, drone.y);
+      ctx.strokeStyle = 'rgba(249,124,110,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      let color = '#f97c6e';
+      if (outcome) {
+        if (outcome.startsWith('DEFENDED'))      color = '#6ef9b0';
+        else if (outcome.startsWith('NO HARM'))  color = '#aaa';
+        else if (outcome.startsWith('FALSE'))    color = '#f9d46e';
+        else                                      color = '#ff4040';
+      }
+      ctx.beginPath();
+      ctx.arc(drone.x, drone.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // ROE step ring (currently being approved) animates between rings
+    if (roeInProgress >= 0) {
+      const t = (timer - roeProgressStart) / ROE[roeInProgress].latency;
+      const r = 40 + t * 25;
+      ctx.beginPath();
+      ctx.arc(CX, CY, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(249,212,110,${1 - t})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
+
+  function updateUI() {
+    const sc = SCENARIOS[currentScenario];
+    const auth = AUTHORITY[sc.authority];
+
+    // Authority badge
+    const ab = document.getElementById('c3-authority');
+    if (ab) {
+      ab.className = 'authority-badge ' + auth.badge;
+      ab.textContent = auth.name;
+    }
+
+    // Signals + fusion (only progress when drone is in flight)
+    if (drone && !outcome) {
+      const sigs = currentSignalValues(timer);
+      const setSig = (key, sig) => {
+        const row = document.getElementById('c3-sig-' + key);
+        const val = document.getElementById('c3-sig-' + key + '-val');
+        if (row) {
+          row.classList.remove('suspicious','benign','neutral','unknown');
+          row.classList.add(sig.cls);
+        }
+        if (val) val.textContent = sig.label;
+      };
+      setSig('track', sigs.track);
+      setSig('remoteid', sigs.remoteid);
+      setSig('classifier', sigs.classifier);
+      setSig('behavior', sigs.behavior);
+
+      const fpct = currentFusion(timer);
+      const fbar = document.getElementById('c3-fusion-bar');
+      const ftxt = document.getElementById('c3-fusion-text');
+      if (fbar) {
+        fbar.style.width = fpct + '%';
+        fbar.style.background = fpct >= 75 ? '#f97c6e' : fpct >= 50 ? '#f9d46e' : '#6ef9b0';
+      }
+      if (ftxt) ftxt.textContent = fpct + '%';
+    } else if (!drone) {
+      // Reset signals
+      ['track','remoteid','classifier','behavior'].forEach(k => {
+        const row = document.getElementById('c3-sig-' + k);
+        const val = document.getElementById('c3-sig-' + k + '-val');
+        if (row) { row.className = 'signal-row unknown'; }
+        if (val) val.textContent = '—';
+      });
+      const fbar = document.getElementById('c3-fusion-bar');
+      const ftxt = document.getElementById('c3-fusion-text');
+      if (fbar) { fbar.style.width = '0%'; fbar.style.background = '#666'; }
+      if (ftxt) ftxt.textContent = '0%';
+    }
+
+    // ROE buttons — enable/disable per authority and progress
+    ROE.forEach((step, i) => {
+      const btn = document.getElementById('c3-roe-' + step.id);
+      if (!btn) return;
+      btn.classList.remove('done','locked');
+      btn.disabled = true;
+      if (i <= roeStep) {
+        btn.classList.add('done');
+      } else if (i > auth.cap) {
+        btn.classList.add('locked');
+      } else if (drone && !outcome && roeInProgress < 0 && i === roeStep + 1) {
+        btn.disabled = false;
+      } else if (drone && !outcome && roeInProgress === i) {
+        btn.disabled = true;
+      }
+    });
+
+    // Decision clock
+    const clockEl = document.getElementById('c3-clock');
+    const clockVal = document.getElementById('c3-clock-val');
+    if (clockEl && clockVal) {
+      if (drone && !outcome) {
+        const distPx = Math.hypot(CX - drone.x, CY - drone.y);
+        const tti = (distPx * M_PER_PX) / sc.speed;
+        clockVal.textContent = tti.toFixed(1) + ' s';
+        clockEl.classList.remove('warn','crit');
+        if (tti < 5) clockEl.classList.add('crit');
+        else if (tti < 12) clockEl.classList.add('warn');
+      } else {
+        clockVal.textContent = drone ? '—' : '— s';
+        clockEl.classList.remove('warn','crit');
+      }
+    }
+
+    // Outcome banner
+    const ob = document.getElementById('c3-outcome');
+    if (ob) {
+      ob.classList.remove('defended','impact');
+      if (outcome) {
+        if (outcome.startsWith('DEFENDED'))      { ob.classList.add('defended'); ob.textContent = '✓ ' + outcome; }
+        else if (outcome.startsWith('NO HARM'))  { ob.textContent = '○ ' + outcome; }
+        else if (outcome.startsWith('FALSE'))    { ob.classList.add('impact'); ob.textContent = '⚠ ' + outcome; }
+        else                                       { ob.classList.add('impact'); ob.textContent = '✗ ' + outcome; }
+      } else if (drone) {
+        // Authority hint when locked out
+        const canReachAction = auth.cap >= 2;
+        if (!canReachAction) {
+          ob.textContent = '⚠ AUTHORITY FAIL — you cannot lawfully engage';
+          ob.classList.add('impact');
+        } else if (roeInProgress >= 0) {
+          ob.textContent = `Approving: ${ROE[roeInProgress].name}...`;
+        } else {
+          ob.textContent = `Stage: ${ROE[roeStep].name}`;
+        }
+      } else {
+        ob.textContent = 'AWAITING THREAT';
+      }
+    }
+
+    // Scenario button highlighting
+    document.querySelectorAll('.scenario-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.scenario === currentScenario);
+    });
+  }
+
+  function escalate(stepIndex) {
+    if (outcome || !drone) return;
+    if (roeInProgress >= 0) return;        // already approving
+    if (stepIndex !== roeStep + 1) return; // must be next step
+    const sc = SCENARIOS[currentScenario];
+    const auth = AUTHORITY[sc.authority];
+    if (stepIndex > auth.cap) return;      // authority gate
+
+    roeInProgress = stepIndex;
+    roeProgressStart = timer;
+  }
+
+  function loop(now) {
+    animId = requestAnimationFrame(loop);
+    if (!lastFrame) lastFrame = now;
+    const dt = Math.min((now - lastFrame) / 1000, 0.1);
+    lastFrame = now;
+    update(dt);
+    draw();
+    updateUI();
+  }
+
+  function init() {
+    canvas = document.getElementById('cuas3-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentScenario = btn.dataset.scenario;
+        reset();
+      });
+    });
+
+    document.getElementById('c3-launch')?.addEventListener('click', launch);
+    document.getElementById('c3-pause')?.addEventListener('click', () => {
+      paused = !paused;
+      const b = document.getElementById('c3-pause');
+      if (b) b.textContent = paused ? 'Resume' : 'Pause';
+    });
+    document.getElementById('c3-reset')?.addEventListener('click', reset);
+
+    ROE.forEach((step, i) => {
+      const btn = document.getElementById('c3-roe-' + step.id);
+      if (btn) btn.addEventListener('click', () => escalate(i));
+    });
+
+    if (animId) cancelAnimationFrame(animId);
+    lastFrame = 0;
+    loop(0);
+  }
+
+  return { init };
+})();
+
+/* ============================================================
    GLOSSARY SEARCH
    ============================================================ */
 (function initGlossary() {
@@ -4898,6 +5632,7 @@ const C2 = (() => {
     if (document.getElementById('m4-canvas')) M4.init();
     if (document.getElementById('cuas1-canvas')) C1.init();
     if (document.getElementById('cuas2-canvas')) C2.init();
+    if (document.getElementById('cuas3-canvas')) C3.init();
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', tryInit);
