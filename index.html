@@ -925,6 +925,122 @@
       border-color: var(--red);
       color: var(--red);
     }
+
+    /* ============================================================
+       C-UAS MODULE 2 — DETECTION & TRACKING
+    ============================================================ */
+    .cuas2-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 260px;
+      gap: 16px;
+      align-items: start;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) {
+      .cuas2-layout { grid-template-columns: 1fr; }
+    }
+    .cuas2-sidebar, .cuas2-rightbar {
+      display: flex; flex-direction: column; gap: 10px; min-width: 0;
+    }
+    .cuas2-canvas-wrap {
+      min-width: 0;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+    .cuas2-canvas-wrap canvas {
+      width: 100%; height: auto; display: block; border-radius: 4px;
+    }
+
+    .sensor-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      border-radius: var(--radius);
+      font-size: 11px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .sensor-toggle:hover { background: rgba(126,184,247,0.06); }
+    .sensor-toggle.off { opacity: 0.35; }
+    .sensor-toggle .range-tag {
+      font-size: 9px;
+      color: var(--text-dim);
+      font-family: var(--font);
+      letter-spacing: 0.05em;
+    }
+
+    .profile-btn {
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 0.12s;
+      margin-bottom: 4px;
+    }
+    .profile-btn:hover { border-color: var(--blue); }
+    .profile-btn.active {
+      border-color: var(--yellow);
+      background: rgba(249,212,110,0.08);
+      color: var(--yellow);
+    }
+
+    .sensor-status-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+    .sensor-status-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      border-radius: var(--radius);
+      font-size: 10px;
+    }
+    .sensor-status-row .status-pill {
+      font-size: 9px;
+      padding: 2px 8px;
+      border-radius: 8px;
+      letter-spacing: 0.05em;
+      font-weight: bold;
+    }
+    .status-pill.off       { background: rgba(80,80,80,0.3); color: var(--text-dim); }
+    .status-pill.waiting   { background: rgba(126,184,247,0.15); color: var(--blue); }
+    .status-pill.detected  { background: rgba(110,249,176,0.18); color: var(--green); }
+    .status-pill.blind     { background: rgba(249,124,110,0.18); color: var(--red); }
+
+    .fusion-bar-wrap {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+    .fusion-bar-track {
+      width: 100%; height: 8px;
+      background: rgba(80,80,80,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .fusion-bar-fill {
+      height: 100%; width: 0%;
+      background: var(--red);
+      transition: width 0.25s, background 0.25s;
+      border-radius: 4px;
+    }
     .gloss-card {
       background: var(--bg-panel);
       border: 1px solid var(--border);
@@ -1573,6 +1689,7 @@
 
   <nav class="subtab-nav" role="tablist" aria-label="C-UAS modules">
     <button class="subtab-btn active" role="tab" data-target="cuas1">C-UAS 1 &mdash; Kill Chain</button>
+    <button class="subtab-btn"        role="tab" data-target="cuas2">C-UAS 2 &mdash; Detection &amp; Tracking</button>
   </nav>
 
 <!-- C-UAS MODULE 1 — KILL CHAIN -->
@@ -1666,6 +1783,138 @@
   </div>
 </div>
 
+
+<!-- C-UAS MODULE 2 — DETECTION & TRACKING -->
+<div id="tab-cuas2" class="tab-pane">
+
+  <details class="theory-panel">
+    <summary>Core Theory &mdash; Why Drones Are Hard to Detect</summary>
+    <div class="theory-body">
+      <div class="theory-item">
+        <span class="theory-term">Radar Cross-Section (RCS)</span>
+        <span class="theory-def">Boeing 747: 100 m&sup2;. Fighter jet: 1-5 m&sup2;. DJI Phantom: 0.01 m&sup2;. Consumer drones have RCS comparable to stealth fighters &mdash; not by design, by accident of size and materials.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">RF Detection</span>
+        <span class="theory-def">Passive monitoring of 2.4/5.8 GHz ISM bands for drone-controller protocols. Catches most consumer drones. Fails completely against autonomous, RF-silent drones &mdash; the catastrophic detection gap.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Acoustic Detection</span>
+        <span class="theory-def">Microphone arrays detect 100-500 Hz blade-pass frequencies. Short range (~300-500 m). Wind and ambient noise kill detection range. Catches autonomous drones that RF cannot.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">EO/IR (Cameras)</span>
+        <span class="theory-def">Visible-light + thermal imaging. Primarily an identification tool, cued by other sensors. Visible blind at night; thermal weakened by solar-heated backgrounds and small electric motor heat.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Hovering Doppler Problem</span>
+        <span class="theory-def">A hovering drone has zero radial velocity. Doppler-filter radar treats it as ground clutter. Hovering drones are essentially radar-invisible &mdash; one of the worst defensive blind spots.</span>
+      </div>
+      <div class="theory-item">
+        <span class="theory-term">Sensor Fusion</span>
+        <span class="theory-def">Combine multiple sensor outputs with probabilistic models. When sensors agree, confidence multiplies. When they disagree, the system must reason: which is right? This is the architecture all real C-UAS systems use.</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="cuas2-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <div class="cuas2-sidebar">
+      <div class="sidebar-section-title">Sensors</div>
+      <div id="c2-sensor-radar"    class="sensor-toggle" data-sensor="radar"    style="border-left-color:#7eb8f7;">
+        <span>Radar<span class="range-tag"> &middot; 3 km base</span></span><span>ON</span>
+      </div>
+      <div id="c2-sensor-rf"       class="sensor-toggle" data-sensor="rf"       style="border-left-color:#6ef9b0;">
+        <span>RF<span class="range-tag"> &middot; 5 km base</span></span><span>ON</span>
+      </div>
+      <div id="c2-sensor-acoustic" class="sensor-toggle" data-sensor="acoustic" style="border-left-color:#f9d46e;">
+        <span>Acoustic<span class="range-tag"> &middot; 500 m base</span></span><span>ON</span>
+      </div>
+      <div id="c2-sensor-eoir"     class="sensor-toggle" data-sensor="eoir"     style="border-left-color:#c0a0f0;">
+        <span>EO/IR<span class="range-tag"> &middot; 2 km base</span></span><span>ON</span>
+      </div>
+
+      <div class="sidebar-section-title">Threat Profile</div>
+      <button class="profile-btn active" data-profile="consumer">Consumer (DJI + Controller)</button>
+      <button class="profile-btn"        data-profile="fpv">FPV Racer (Controller)</button>
+      <button class="profile-btn"        data-profile="autonomous">Autonomous (RF Silent)</button>
+      <button class="profile-btn"        data-profile="hovering">Hovering Loiter</button>
+      <button class="profile-btn"        data-profile="stealth">Full Stealth Profile</button>
+
+      <div class="sidebar-section-title">Drone Speed</div>
+      <div class="slider-group">
+        <label class="slider-label">m/s<span class="slider-val" id="c2-speed-val">25</span></label>
+        <input type="range" id="c2-speed" min="5" max="100" step="5" value="25">
+      </div>
+
+      <div class="sidebar-section-title">Controls</div>
+      <button id="c2-launch" class="ctrl-btn ctrl-btn--green">Launch Threat</button>
+      <button id="c2-pause" class="ctrl-btn">Pause</button>
+      <button id="c2-reset" class="ctrl-btn">Reset</button>
+    </div>
+
+    <!-- CENTER CANVAS -->
+    <div class="cuas2-canvas-wrap">
+      <canvas id="cuas2-canvas" width="600" height="480"></canvas>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="cuas2-rightbar">
+
+      <div class="sidebar-section-title">Environment</div>
+      <div class="slider-group">
+        <label class="slider-label">Wind <span class="range-tag">(kills acoustic)</span><span class="slider-val" id="c2-wind-val">0%</span></label>
+        <input type="range" id="c2-wind" min="0" max="100" step="5" value="0">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Urban Clutter <span class="range-tag">(kills radar)</span><span class="slider-val" id="c2-clutter-val">0%</span></label>
+        <input type="range" id="c2-clutter" min="0" max="100" step="5" value="0">
+      </div>
+      <div class="slider-group">
+        <label class="slider-label">Thermal Noise <span class="range-tag">(kills EO/IR)</span><span class="slider-val" id="c2-thermal-val">0%</span></label>
+        <input type="range" id="c2-thermal" min="0" max="100" step="5" value="0">
+      </div>
+
+      <div class="sidebar-section-title">Sensor Status</div>
+      <div class="sensor-status-grid" id="c2-status-grid">
+        <div class="sensor-status-row" style="border-left-color:#7eb8f7;">
+          <span>Radar<br/><span class="range-tag" id="c2-range-radar">eff: 3.0 km</span></span>
+          <span class="status-pill waiting" id="c2-status-radar">WAITING</span>
+        </div>
+        <div class="sensor-status-row" style="border-left-color:#6ef9b0;">
+          <span>RF<br/><span class="range-tag" id="c2-range-rf">eff: 5.0 km</span></span>
+          <span class="status-pill waiting" id="c2-status-rf">WAITING</span>
+        </div>
+        <div class="sensor-status-row" style="border-left-color:#f9d46e;">
+          <span>Acoustic<br/><span class="range-tag" id="c2-range-acoustic">eff: 0.5 km</span></span>
+          <span class="status-pill waiting" id="c2-status-acoustic">WAITING</span>
+        </div>
+        <div class="sensor-status-row" style="border-left-color:#c0a0f0;">
+          <span>EO/IR<br/><span class="range-tag" id="c2-range-eoir">eff: 2.0 km</span></span>
+          <span class="status-pill waiting" id="c2-status-eoir">WAITING</span>
+        </div>
+      </div>
+
+      <div class="fusion-bar-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:10px;">
+          <span>FUSION CONFIDENCE</span>
+          <span id="c2-fusion-text">0%</span>
+        </div>
+        <div class="fusion-bar-track">
+          <div id="c2-fusion-bar" class="fusion-bar-fill"></div>
+        </div>
+      </div>
+
+      <div id="c2-outcome" class="outcome-box">AWAITING THREAT</div>
+
+      <div class="info-bar" style="font-size:10px;">
+        Switch profile to <strong>Autonomous</strong> &mdash; watch RF go BLIND. Switch to <strong>Hovering</strong> &mdash; watch radar collapse. Push <strong>Wind</strong> to 100% &mdash; acoustic dies. Stealth + bad environment &mdash; nothing detects.
+      </div>
+    </div>
+
+  </div>
+</div>
 
 </div>
 <!-- end #section-cuas -->
@@ -4170,6 +4419,411 @@ const C1 = (() => {
 })();
 
 /* ============================================================
+   C-UAS MODULE 2 — DETECTION & TRACKING (SENSOR FUSION)
+   ============================================================ */
+const C2 = (() => {
+  const W = 600, H = 480;
+  const CX = W / 2, CY = H / 2;
+  const M_PER_PX = 1000 / 44;   // 44 px = 1 km, same scale as C1
+  const PX_PER_M = 1 / M_PER_PX;
+
+  // Sensor definitions. base_m = base detection range in meters
+  const SENSORS = [
+    { id: 'radar',    name: 'Radar',    base_m: 3000, color: '#7eb8f7' },
+    { id: 'rf',       name: 'RF',       base_m: 5000, color: '#6ef9b0' },
+    { id: 'acoustic', name: 'Acoustic', base_m: 500,  color: '#f9d46e' },
+    { id: 'eoir',     name: 'EO/IR',    base_m: 2000, color: '#c0a0f0' },
+  ];
+
+  // Drone profiles: per-sensor multiplier on base range.
+  // 0 means total blindness for that sensor.
+  const PROFILES = {
+    consumer:   { name: 'Consumer + Controller',  mods: { radar: 1.00, rf: 1.00, acoustic: 1.00, eoir: 1.00 }, color: '#f97c6e' },
+    fpv:        { name: 'FPV Racer',              mods: { radar: 0.55, rf: 1.00, acoustic: 0.70, eoir: 0.70 }, color: '#f97c6e' },
+    autonomous: { name: 'Autonomous (RF Silent)', mods: { radar: 0.80, rf: 0.00, acoustic: 1.00, eoir: 0.90 }, color: '#f97c6e' },
+    hovering:   { name: 'Hovering Loiter',        mods: { radar: 0.10, rf: 1.00, acoustic: 1.00, eoir: 1.10 }, color: '#f97c6e' },
+    stealth:    { name: 'Full Stealth Profile',   mods: { radar: 0.30, rf: 0.00, acoustic: 0.55, eoir: 0.40 }, color: '#f97c6e' },
+  };
+
+  // Environment effect on each sensor (returns factor in [0,1])
+  function envFactor(sensorId, env) {
+    if (sensorId === 'radar')    return Math.max(0, 1 - 0.85 * env.clutter);
+    if (sensorId === 'acoustic') return Math.max(0, 1 - 0.90 * env.wind);
+    if (sensorId === 'eoir')     return Math.max(0, 1 - 0.70 * env.thermal);
+    return 1; // RF mostly unaffected by these env factors
+  }
+
+  function effectiveRangeM(sensor, profile, env) {
+    return sensor.base_m * profile.mods[sensor.id] * envFactor(sensor.id, env);
+  }
+
+  // ---- State ----
+  let canvas, ctx, animId = null;
+  let drone = null;
+  let outcome = null;            // null | 'DETECTED' | 'MISSED'
+  let firstDetectTime = null;
+  let firstDetectBy = null;
+  let timer = 0;
+  let lastFrame = 0;
+  let paused = false;
+  let speedMps = 25;
+  let currentProfile = 'consumer';
+  let sensorOn = { radar: true, rf: true, acoustic: true, eoir: true };
+  let env = { wind: 0, clutter: 0, thermal: 0 };
+  let hoverModeStop = false;     // set true when hovering profile reaches a hover point
+
+  function reset() {
+    drone = null;
+    outcome = null;
+    firstDetectTime = null;
+    firstDetectBy = null;
+    timer = 0;
+    hoverModeStop = false;
+    updateUI();
+  }
+
+  function launch() {
+    const angle = Math.random() * Math.PI * 2;
+    const startR = 235;
+    drone = {
+      x: CX + Math.cos(angle) * startR,
+      y: CY + Math.sin(angle) * startR,
+      angle: angle + Math.PI,    // toward center
+    };
+    outcome = null;
+    firstDetectTime = null;
+    firstDetectBy = null;
+    timer = 0;
+    hoverModeStop = false;
+  }
+
+  // Convert meters → pixels for visualization
+  function mToPx(m) { return m * PX_PER_M; }
+
+  function update(dt) {
+    if (!drone || outcome || paused) return;
+    timer += dt;
+
+    const dx = CX - drone.x, dy = CY - drone.y;
+    const distPx = Math.hypot(dx, dy);
+
+    // Hovering profile: stop at ~1.5 km out and hover there
+    if (currentProfile === 'hovering' && distPx < mToPx(1500)) {
+      hoverModeStop = true;
+    }
+
+    if (!hoverModeStop) {
+      const pxPerSec = speedMps * PX_PER_M;
+      drone.x += (dx / distPx) * pxPerSec * dt;
+      drone.y += (dy / distPx) * pxPerSec * dt;
+    }
+
+    // MISSED if drone reaches asset (or hover point persists undetected for 30s)
+    if (distPx < mToPx(100)) {
+      if (firstDetectTime === null) outcome = 'MISSED';
+      else outcome = 'DETECTED'; // already detected before terminal
+      return;
+    }
+    if (hoverModeStop && firstDetectTime === null && timer > 30) {
+      outcome = 'MISSED';
+      return;
+    }
+
+    // Check each enabled sensor
+    const droneDistM = distPx * M_PER_PX;
+    const profile = PROFILES[currentProfile];
+    SENSORS.forEach(s => {
+      if (!sensorOn[s.id]) return;
+      const rangeM = effectiveRangeM(s, profile, env);
+      if (rangeM <= 0) return;
+      if (droneDistM < rangeM) {
+        if (firstDetectTime === null) {
+          firstDetectTime = timer;
+          firstDetectBy = s.id;
+        }
+      }
+    });
+
+    // Hovering: if detected by anyone, eventually call it DETECTED
+    if (hoverModeStop && firstDetectTime !== null && timer - firstDetectTime > 3) {
+      outcome = 'DETECTED';
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // grid
+    ctx.strokeStyle = 'rgba(30,42,69,0.3)';
+    ctx.lineWidth = 0.5;
+    for (let g = 0; g < W; g += 44) {
+      ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, H); ctx.stroke();
+    }
+    for (let g = 0; g < H; g += 44) {
+      ctx.beginPath(); ctx.moveTo(0, g); ctx.lineTo(W, g); ctx.stroke();
+    }
+
+    // sensor coverage rings (effective range per current profile + env)
+    const profile = PROFILES[currentProfile];
+    SENSORS.forEach(s => {
+      const on = sensorOn[s.id];
+      const rangeM = effectiveRangeM(s, profile, env);
+      const rangePx = mToPx(rangeM);
+      if (!on || rangePx < 4) return;
+
+      // outer ring
+      ctx.beginPath();
+      ctx.arc(CX, CY, Math.min(rangePx, 280), 0, Math.PI * 2);
+      ctx.strokeStyle = hexAlpha(s.color, 0.55);
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // subtle fill
+      ctx.beginPath();
+      ctx.arc(CX, CY, Math.min(rangePx, 280), 0, Math.PI * 2);
+      ctx.fillStyle = hexAlpha(s.color, 0.035);
+      ctx.fill();
+
+      // range label outside ring
+      const labelR = Math.min(rangePx, 280);
+      ctx.fillStyle = s.color;
+      ctx.font = 'bold 9px Courier New';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${s.name}`, CX + labelR + 4, CY - 4);
+      ctx.fillStyle = hexAlpha(s.color, 0.7);
+      ctx.font = '8px Courier New';
+      ctx.fillText(`${(rangeM/1000).toFixed(2)} km`, CX + labelR + 4, CY + 6);
+    });
+
+    // Asset (substation)
+    ctx.fillStyle = '#f9d46e';
+    ctx.fillRect(CX - 9, CY - 9, 18, 18);
+    ctx.strokeStyle = '#c8a23d';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(CX - 9, CY - 9, 18, 18);
+    ctx.fillStyle = '#0a0e1a';
+    ctx.font = 'bold 9px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('A', CX, CY + 3);
+
+    // Drone
+    if (drone) {
+      const dx = CX - drone.x, dy = CY - drone.y;
+      const distPx = Math.hypot(dx, dy);
+
+      // trail
+      const trailX = drone.x - (dx / distPx) * 30;
+      const trailY = drone.y - (dy / distPx) * 30;
+      ctx.beginPath();
+      ctx.moveTo(trailX, trailY);
+      ctx.lineTo(drone.x, drone.y);
+      ctx.strokeStyle = 'rgba(249,124,110,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // drone body
+      ctx.beginPath();
+      ctx.arc(drone.x, drone.y, 5, 0, Math.PI * 2);
+      let color = '#f97c6e';
+      if (outcome === 'DETECTED') color = '#6ef9b0';
+      if (outcome === 'MISSED')   color = '#ff4040';
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // first detection pulse
+      if (firstDetectTime !== null && timer - firstDetectTime < 0.8) {
+        const t = (timer - firstDetectTime) / 0.8;
+        ctx.beginPath();
+        ctx.arc(drone.x, drone.y, 8 + t * 18, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(110,249,176,${1 - t})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // outcome flash
+      if (outcome === 'MISSED') {
+        const t = (Date.now() % 600) / 600;
+        ctx.beginPath();
+        ctx.arc(CX, CY, 30 + t * 40, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,80,80,${1 - t})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+    }
+  }
+
+  function hexAlpha(hex, a) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  function updateUI() {
+    const profile = PROFILES[currentProfile];
+
+    // Sensor status (effective range + detection status)
+    let detectingCount = 0;
+    let enabledCount = 0;
+    SENSORS.forEach(s => {
+      const on = sensorOn[s.id];
+      const rangeM = effectiveRangeM(s, profile, env);
+      const rangeEl = document.getElementById('c2-range-' + s.id);
+      const pillEl = document.getElementById('c2-status-' + s.id);
+      const toggleEl = document.getElementById('c2-sensor-' + s.id);
+      if (rangeEl) rangeEl.textContent = `eff: ${(rangeM/1000).toFixed(2)} km`;
+      if (toggleEl) toggleEl.classList.toggle('off', !on);
+
+      if (!pillEl) return;
+      pillEl.classList.remove('off', 'waiting', 'detected', 'blind');
+
+      if (!on) {
+        pillEl.classList.add('off');
+        pillEl.textContent = 'OFF';
+        return;
+      }
+      enabledCount++;
+      if (rangeM <= 1) {
+        pillEl.classList.add('blind');
+        pillEl.textContent = 'BLIND';
+        return;
+      }
+      if (drone) {
+        const distPx = Math.hypot(CX - drone.x, CY - drone.y);
+        const distM = distPx * M_PER_PX;
+        if (distM < rangeM) {
+          pillEl.classList.add('detected');
+          pillEl.textContent = 'DETECTED';
+          detectingCount++;
+        } else {
+          pillEl.classList.add('waiting');
+          pillEl.textContent = 'WAITING';
+        }
+      } else {
+        pillEl.classList.add('waiting');
+        pillEl.textContent = 'WAITING';
+      }
+    });
+
+    // Fusion confidence
+    const fusionPct = enabledCount > 0 ? Math.round((detectingCount / enabledCount) * 100) : 0;
+    const fbar = document.getElementById('c2-fusion-bar');
+    const ftxt = document.getElementById('c2-fusion-text');
+    if (fbar) {
+      fbar.style.width = fusionPct + '%';
+      fbar.style.background = fusionPct >= 75 ? '#6ef9b0' :
+                              fusionPct >= 50 ? '#f9d46e' :
+                              fusionPct >  0  ? '#f97c6e' : '#666';
+    }
+    if (ftxt) ftxt.textContent = fusionPct + '%';
+
+    // Outcome banner
+    const ob = document.getElementById('c2-outcome');
+    if (ob) {
+      ob.classList.remove('defended', 'impact');
+      if (outcome === 'DETECTED') {
+        ob.classList.add('defended');
+        ob.textContent = `✓ DETECTED by ${firstDetectBy?.toUpperCase()}`;
+      } else if (outcome === 'MISSED') {
+        ob.classList.add('impact');
+        ob.textContent = '✗ MISSED — drone reached asset';
+      } else if (drone) {
+        ob.textContent = firstDetectTime !== null
+          ? `Tracking · first by ${firstDetectBy?.toUpperCase()}`
+          : 'Threat inbound — no detection yet';
+      } else {
+        ob.textContent = 'AWAITING THREAT';
+      }
+    }
+
+    // Profile buttons
+    document.querySelectorAll('.profile-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.profile === currentProfile);
+    });
+
+    // Slider value displays
+    const setText = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    setText('c2-speed-val', speedMps);
+    setText('c2-wind-val', Math.round(env.wind * 100) + '%');
+    setText('c2-clutter-val', Math.round(env.clutter * 100) + '%');
+    setText('c2-thermal-val', Math.round(env.thermal * 100) + '%');
+
+    // Sensor toggle ON/OFF text
+    SENSORS.forEach(s => {
+      const t = document.getElementById('c2-sensor-' + s.id);
+      if (t) {
+        const last = t.querySelector('span:last-child');
+        if (last) last.textContent = sensorOn[s.id] ? 'ON' : 'OFF';
+      }
+    });
+  }
+
+  function loop(now) {
+    animId = requestAnimationFrame(loop);
+    if (!lastFrame) lastFrame = now;
+    const dt = Math.min((now - lastFrame) / 1000, 0.1);
+    lastFrame = now;
+    update(dt);
+    draw();
+    updateUI();
+  }
+
+  function init() {
+    canvas = document.getElementById('cuas2-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    // Sensor toggles
+    SENSORS.forEach(s => {
+      const el = document.getElementById('c2-sensor-' + s.id);
+      if (el) el.addEventListener('click', () => { sensorOn[s.id] = !sensorOn[s.id]; });
+    });
+
+    // Profile buttons
+    document.querySelectorAll('.profile-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentProfile = btn.dataset.profile;
+      });
+    });
+
+    // Sliders
+    const bindSlider = (id, key, scale) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', e => {
+        const v = parseFloat(e.target.value);
+        if (key === 'speed') speedMps = v;
+        else env[key] = v / 100;
+      });
+    };
+    bindSlider('c2-speed', 'speed');
+    bindSlider('c2-wind', 'wind');
+    bindSlider('c2-clutter', 'clutter');
+    bindSlider('c2-thermal', 'thermal');
+
+    // Controls
+    document.getElementById('c2-launch')?.addEventListener('click', launch);
+    document.getElementById('c2-pause')?.addEventListener('click', () => {
+      paused = !paused;
+      const b = document.getElementById('c2-pause');
+      if (b) b.textContent = paused ? 'Resume' : 'Pause';
+    });
+    document.getElementById('c2-reset')?.addEventListener('click', reset);
+
+    if (animId) cancelAnimationFrame(animId);
+    lastFrame = 0;
+    loop(0);
+  }
+
+  return { init };
+})();
+
+/* ============================================================
    GLOSSARY SEARCH
    ============================================================ */
 (function initGlossary() {
@@ -4243,6 +4897,7 @@ const C1 = (() => {
     if (document.getElementById('m3-canvas')) M3.init();
     if (document.getElementById('m4-canvas')) M4.init();
     if (document.getElementById('cuas1-canvas')) C1.init();
+    if (document.getElementById('cuas2-canvas')) C2.init();
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', tryInit);
