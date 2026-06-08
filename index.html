@@ -1297,6 +1297,106 @@
       bottom: 2px; right: 2px;
       border-width: 0 2px 2px 0;
     }
+
+    /* Cross-industry parallel chip in c2-header */
+    .c2-parallel {
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .c2-parallel::before {
+      content: '↔ ';
+      color: var(--blue);
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    /* Event log — universal C2/SCADA/NOC pattern */
+    .event-log-panel {
+      margin: 18px auto 0;
+      max-width: 1100px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--blue);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .event-log-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      font-family: var(--font);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: linear-gradient(180deg, rgba(126,184,247,0.04) 0%, transparent 100%);
+      list-style: none;
+    }
+    .event-log-summary::-webkit-details-marker,
+    .event-log-summary::marker { display: none; content: ''; }
+    .event-log-summary::before {
+      content: '▶ ';
+      color: var(--blue);
+      margin-right: 6px;
+      transition: transform 0.15s;
+      display: inline-block;
+    }
+    details[open] > .event-log-summary::before { content: '▼ '; }
+    .elp-title {
+      color: var(--blue);
+      font-weight: bold;
+      letter-spacing: 0.1em;
+    }
+    .elp-meta {
+      color: var(--text-dim);
+      font-size: 9px;
+      font-style: italic;
+    }
+    .event-log-body {
+      max-height: 220px;
+      overflow-y: auto;
+      font-family: var(--font);
+      font-size: 11px;
+      padding: 4px 10px 10px;
+      border-top: 1px solid var(--border);
+    }
+    .event-log-body:empty::before {
+      content: 'No events yet — interact with the simulation to populate the audit trail.';
+      display: block;
+      padding: 14px 4px;
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 10px;
+    }
+    .log-row {
+      display: grid;
+      grid-template-columns: 90px 56px 1fr;
+      gap: 8px;
+      padding: 3px 4px;
+      border-bottom: 1px solid rgba(50,60,80,0.25);
+      color: var(--text-dim);
+      line-height: 1.5;
+      font-variant-numeric: tabular-nums;
+    }
+    .log-row:last-child { border-bottom: none; }
+    .log-row .log-ts { color: var(--text-dim); font-size: 10px; }
+    .log-row .log-sev {
+      font-weight: bold;
+      font-size: 10px;
+      text-align: center;
+      letter-spacing: 0.06em;
+    }
+    .log-row .log-msg { color: var(--text); font-size: 11px; }
+    .sev-info  .log-sev { color: var(--green); }
+    .sev-warn  .log-sev { color: var(--yellow); }
+    .sev-crit  .log-sev { color: var(--red); }
+    .sev-debug .log-sev { color: var(--text-dim); }
+    .sev-crit  { background: rgba(249,124,110,0.05); }
+    .sev-warn  { background: rgba(249,212,110,0.03); }
     .gloss-card {
       background: var(--bg-panel);
       border: 1px solid var(--border);
@@ -5873,8 +5973,243 @@ const C3 = (() => {
     el.classList.add(color);
   }
 
-  // Poll all C-UAS headers 4×/sec — cheap, decoupled from sim internals
-  setInterval(() => { syncC1(); syncC2(); syncC3(); }, 250);
+  // ---- Cross-industry parallels — chips in headers, theory items in panels ----
+  const PARALLELS = {
+    m1: { pane: 'tab-mod1',     chip: 'DISTRIBUTED SYSTEMS',
+          term: 'Cross-Industry Pattern',
+          full: 'Architecture trade-offs identical to: monolith vs. sharded database (Cassandra, CockroachDB), centralized telephony vs. SIP mesh, corporate datacenter vs. edge compute. The CAP theorem and the SPOF analysis apply unchanged. Same vocabulary in distributed systems engineering and SCADA control system design.' },
+    m2: { pane: 'tab-mod2',     chip: 'PARTICLE SWARM OPT',
+          term: 'Cross-Industry Pattern',
+          full: 'Local rules → emergent global behavior is the foundation of agent-based modeling. Used in market microstructure simulation, traffic flow modeling, epidemic forecasting, evacuation planning, and warehouse logistics optimization. Particle Swarm Optimization in operations research is Boids without rendering.' },
+    m3: { pane: 'tab-mod3',     chip: 'DATABASE REPLICATION',
+          term: 'Cross-Industry Pattern',
+          full: 'Gossip and anti-entropy protocols are the workhorse of eventually-consistent distributed databases (Cassandra, DynamoDB, Riak) and of internet routing (BGP). The log_k(N) convergence applies in any peer-to-peer network: MQTT brokers, blockchain peer discovery, even biological information spread.' },
+    m4: { pane: 'tab-mod4',     chip: 'WAREHOUSE ROBOTICS',
+          term: 'Cross-Industry Pattern',
+          full: 'Reactive avoidance + map-based planning + decentralized coordination is the architecture of every Amazon Kiva warehouse fleet, every self-driving car planner, every robot vacuum. A* itself runs in Google Maps routing, RTS game AI, and BGP route selection.' },
+    c1: { pane: 'tab-cuas1',    chip: 'SOC / NOC ESCALATION',
+          term: 'Cross-Industry Pattern',
+          full: 'The C-UAS kill chain is structurally identical to the cybersecurity kill chain (Lockheed Martin), the Security Operations Center incident response workflow, hospital code blue response, and fire/EMS dispatch. Detect → Track → Identify → Decide → Act is a universal incident response pattern with the same failure modes everywhere.' },
+    c2: { pane: 'tab-cuas2',    chip: 'AV PERCEPTION STACK',
+          term: 'Cross-Industry Pattern',
+          full: 'Multi-sensor fusion is the perception stack of every self-driving car (lidar + radar + camera + GPS), every aviation surveillance system (ADS-B + primary + secondary radar), every weather monitoring network, and every modern medical imaging workflow. Same Kalman filters, same Bayesian fusion, same false-positive/false-negative trade-off.' },
+    c3: { pane: 'tab-cuas3',    chip: 'CHANGE-MGMT APPROVAL',
+          term: 'Cross-Industry Pattern',
+          full: 'Authority gating and escalation chains are the operational backbone of change management (ITIL, SOX), hospital surgical authorization, financial trading kill switches, nuclear launch protocols, and military ROE. Sensor operator → supervisor → commander → higher echelon is the same shape with different titles.' },
+  };
+
+  function injectChips() {
+    Object.values(PARALLELS).forEach(p => {
+      const pane = document.getElementById(p.pane);
+      if (!pane) return;
+      const header = pane.querySelector('.c2-header');
+      if (!header) return;
+      const blocks = header.querySelectorAll('.c2-block');
+      const clockBlock = blocks[blocks.length - 1];
+      if (!clockBlock) return;
+      const chip = document.createElement('div');
+      chip.className = 'c2-block';
+      chip.innerHTML = '<span class="c2-parallel">' + p.chip + '</span>';
+      header.insertBefore(chip, clockBlock);
+    });
+  }
+
+  function injectTheoryParallels() {
+    Object.values(PARALLELS).forEach(p => {
+      const pane = document.getElementById(p.pane);
+      if (!pane) return;
+      const body = pane.querySelector('.theory-body');
+      if (!body) return;
+      const item = document.createElement('div');
+      item.className = 'theory-item';
+      item.innerHTML =
+        '<span class="theory-term">' + p.term + '</span>' +
+        '<span class="theory-def">' + p.full + '</span>';
+      body.appendChild(item);
+    });
+  }
+
+  // ---- Event log — universal C2/SCADA/NOC audit trail ----
+  const Log = (() => {
+    const stores = {};
+    const MAX = 60;
+    function ts() {
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      const h = Math.floor(elapsed / 3600);
+      const m = Math.floor((elapsed % 3600) / 60);
+      const s = elapsed % 60;
+      return pad(h) + ':' + pad(m) + ':' + pad(s);
+    }
+    function push(modKey, sev, msg) {
+      if (!stores[modKey]) stores[modKey] = [];
+      stores[modKey].push({ ts: ts(), sev, msg });
+      if (stores[modKey].length > MAX) stores[modKey].shift();
+      render(modKey);
+    }
+    function render(modKey) {
+      const body = document.getElementById('log-body-' + modKey);
+      if (!body) return;
+      body.innerHTML = stores[modKey].map(e =>
+        '<div class="log-row sev-' + e.sev.toLowerCase() + '">' +
+          '<span class="log-ts">T+' + e.ts + '</span>' +
+          '<span class="log-sev">' + e.sev + '</span>' +
+          '<span class="log-msg">' + e.msg + '</span>' +
+        '</div>'
+      ).join('');
+      body.scrollTop = body.scrollHeight;
+    }
+    return { push };
+  })();
+
+  function injectLogPanels() {
+    Object.entries(PARALLELS).forEach(([key, p]) => {
+      const pane = document.getElementById(p.pane);
+      if (!pane) return;
+      if (pane.querySelector('.event-log-panel')) return;
+      const panel = document.createElement('details');
+      panel.className = 'event-log-panel';
+      panel.innerHTML =
+        '<summary class="event-log-summary">' +
+          '<span><span class="elp-title">EVENT LOG</span> &nbsp; ' + key.toUpperCase() + '</span>' +
+          '<span class="elp-meta">SEV-TAGGED &middot; ROLLING 60 &middot; CLICK TO EXPAND</span>' +
+        '</summary>' +
+        '<div class="event-log-body" id="log-body-' + key + '"></div>';
+      pane.appendChild(panel);
+      Log.push(key, 'INFO', 'Module initialized — ' + p.chip + ' pattern');
+    });
+  }
+
+  // ---- Event capture hooks per module ----
+  function wireSwarmEvents() {
+    // M1: kill command + reset
+    document.getElementById('btn-kill')?.addEventListener('click', () => {
+      Log.push('m1', 'WARN', 'NEUTRALIZE order issued — random asset');
+    });
+    document.getElementById('btn-reset')?.addEventListener('click', () => {
+      Log.push('m1', 'INFO', 'Mission reset — assets restored');
+    });
+    document.getElementById('btn-pause')?.addEventListener('click', () => {
+      Log.push('m1', 'DEBUG', 'Simulation paused/resumed');
+    });
+
+    // M2: presets + neighbor mode
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        Log.push('m2', 'INFO', 'Doctrine preset: ' + (b.dataset.preset || b.textContent).toUpperCase());
+      });
+    });
+    document.getElementById('b-neighbor-mode')?.addEventListener('click', () => {
+      setTimeout(() => {
+        const mode = document.getElementById('m2-mode-readout')?.textContent || '?';
+        Log.push('m2', 'DEBUG', 'Sense mode → ' + mode);
+      }, 60);
+    });
+    document.getElementById('m2-btn-rogue')?.addEventListener('click', () => {
+      Log.push('m2', 'WARN', 'Rogue asset injected (alignment disabled)');
+    });
+
+    // M3: action buttons (inject events + partitions)
+    [
+      ['m3-inject-true', 'INFO',  'True detection injected'],
+      ['m3-inject-false','WARN',  'False detection injected'],
+      ['m3-inject-nofly','CRIT',  'Adversarial no-fly zone injected'],
+      ['m3-wall-btn',    'WARN',  'Network partition toggled'],
+      ['m3-relay-add',   'INFO',  'Relay drone added to mesh'],
+      ['m3-anchor-add',  'INFO',  'UWB anchor added'],
+      ['m3-hidden-btn',  'WARN',  'Hidden-node demo initiated'],
+    ].forEach(([id, sev, msg]) => {
+      document.getElementById(id)?.addEventListener('click', () => Log.push('m3', sev, msg));
+    });
+
+    // M4: scenario changes + layer toggles
+    document.querySelectorAll('.m4-scene-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        Log.push('m4', 'INFO', 'AO changed → ' + b.dataset.scene.toUpperCase());
+      });
+    });
+    [
+      ['m4-toggle-astar', 'A* planner'],
+      ['m4-toggle-forces','force vectors'],
+      ['m4-toggle-heat',  'heat map'],
+      ['m4-toggle-vo',    'VO cones'],
+    ].forEach(([id, label]) => {
+      document.getElementById(id)?.addEventListener('click', () => {
+        Log.push('m4', 'DEBUG', label + ' overlay toggled');
+      });
+    });
+  }
+
+  // ---- C-UAS event capture via state delta detection ----
+  let lastC1 = { state: null, layers: null };
+  function captureC1Events() {
+    const stateEl = document.getElementById('c1-c2-state');
+    const layersEl = document.getElementById('c1-c2-layers');
+    if (!stateEl || !layersEl) return;
+    const state = stateEl.textContent;
+    const layers = layersEl.textContent;
+    if (lastC1.state !== null && state !== lastC1.state) {
+      const sev = state === 'BREACH' ? 'CRIT' : state === 'DEFENDED' ? 'INFO' : 'WARN';
+      Log.push('c1', sev, 'Posture → ' + state);
+    }
+    if (lastC1.layers !== null && layers !== lastC1.layers) {
+      Log.push('c1', 'WARN', 'Layer config → ' + layers + ' active');
+    }
+    lastC1.state = state; lastC1.layers = layers;
+  }
+
+  let lastC2 = { state: null, profile: null, sensors: null };
+  function captureC2Events() {
+    const stateEl = document.getElementById('c2-c2-state');
+    const profEl  = document.getElementById('c2-c2-profile');
+    const sensEl  = document.getElementById('c2-c2-sensors');
+    if (!stateEl || !profEl || !sensEl) return;
+    const s = stateEl.textContent, p = profEl.textContent, n = sensEl.textContent;
+    if (lastC2.state !== null && s !== lastC2.state) {
+      const sev = s === 'MISSED' ? 'CRIT' : s === 'DETECTED' ? 'INFO' : 'WARN';
+      Log.push('c2', sev, 'Posture → ' + s);
+    }
+    if (lastC2.profile !== null && p !== lastC2.profile) {
+      Log.push('c2', 'INFO', 'Threat profile selected → ' + p);
+    }
+    if (lastC2.sensors !== null && n !== lastC2.sensors) {
+      Log.push('c2', 'WARN', 'Sensor config → ' + n + ' active');
+    }
+    lastC2.state = s; lastC2.profile = p; lastC2.sensors = n;
+  }
+
+  let lastC3 = { state: null, auth: null, roe: null };
+  function captureC3Events() {
+    const stateEl = document.getElementById('c3-c2-state');
+    const authEl  = document.getElementById('c3-c2-auth');
+    const roeEl   = document.getElementById('c3-c2-roe');
+    if (!stateEl || !authEl || !roeEl) return;
+    const s = stateEl.textContent, a = authEl.textContent, r = roeEl.textContent;
+    if (lastC3.state !== null && s !== lastC3.state) {
+      const sev = (s === 'BREACH' || s === 'AUTH-FAIL') ? 'CRIT'
+                : (s === 'DEFENDED' || s === 'CORRECT-HOLD') ? 'INFO'
+                : 'WARN';
+      Log.push('c3', sev, 'Posture → ' + s);
+    }
+    if (lastC3.auth !== null && a !== lastC3.auth) {
+      Log.push('c3', 'INFO', 'Authority role → ' + a);
+    }
+    if (lastC3.roe !== null && r !== lastC3.roe) {
+      Log.push('c3', 'WARN', 'ROE stage advanced → ' + r);
+    }
+    lastC3.state = s; lastC3.auth = a; lastC3.roe = r;
+  }
+
+  // Initial injection
+  injectChips();
+  injectTheoryParallels();
+  injectLogPanels();
+  wireSwarmEvents();
+
+  // Poll C-UAS headers 4×/sec — and capture deltas as log events
+  setInterval(() => {
+    syncC1(); syncC2(); syncC3();
+    captureC1Events(); captureC2Events(); captureC3Events();
+  }, 250);
   syncC1(); syncC2(); syncC3();
 })();
 

@@ -41,7 +41,18 @@ Then open the URL printed in the terminal.
 
 Every module is framed as a **command-and-control (C2) operations display**. Each tab opens with an operational header strip (module designation, system LED, contextual callouts, and a live mission elapsed timer `T+ HH:MM:SS` synchronized across the whole site), and canvases are bracketed in HUD-style corner marks.
 
-The C-UAS module headers live-update from the simulation state — the LED turns yellow during engagements, red on breach or authority failure, and the readouts show current sensor count, threat profile, ROE stage, and authority role as the user interacts. Swarm Intelligence headers do the same for swarm mode, area of operations, and protocol.
+Live-updating headers reflect simulation state in real time: LEDs turn yellow during engagements and red on breach or authority failure, while readouts track current sensor count, threat profile, ROE stage, area of operations, sense mode, and authority role as the user interacts.
+
+Below each module sits an **event log panel** — the universal pattern in C2 systems, SCADA control rooms, Network Operations Centers, and Security Operations Centers. Every meaningful action and posture change is appended as a SEV-tagged, timestamped row (`T+ HH:MM:SS  SEV  message`), with rolling-60 retention. The log is the audit trail: collapsible, scrollable, color-coded by severity (INFO / WARN / CRIT / DEBUG).
+
+## Drawing parallels — same pattern, different industry
+
+A core pedagogical goal is to make the **cross-industry abstraction** visible. Every C2 pattern in this visualizer appears, almost unchanged, in other domains — the vocabulary differs but the engineering is the same. Each module surfaces this in two places:
+
+- A small italic chip in the header (`↔ SOC / NOC ESCALATION`, `↔ DATABASE REPLICATION`, etc.) names the cousin domain at a glance.
+- A "Cross-Industry Pattern" theory item in each module's expandable theory panel spells out where the same structure shows up (distributed databases, particle swarm optimization, warehouse robotics, cybersecurity kill chains, autonomous vehicle perception stacks, ITIL change management, hospital triage protocols).
+
+The intent: someone who learns this curriculum should be able to walk into a NOC, a trading floor, a fleet-management console, or an SRE incident review and immediately recognize the architecture.
 
 The educational content — theory panels, sliders, scenario buttons, glossary — is unchanged underneath; the C2 chrome is just a frame that makes the simulations feel like an operator's screen rather than a textbook demo.
 
