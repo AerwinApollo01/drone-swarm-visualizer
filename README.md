@@ -37,6 +37,10 @@ npx serve .
 
 Then open the URL printed in the terminal.
 
+## Visual style
+
+Modules are framed as a **command-and-control (C2) operations display**: each Swarm Intelligence module opens with an operational header strip (module designation, system LED, asset/mode/protocol callouts, and a live mission elapsed timer `T+ HH:MM:SS`), and canvases are bracketed in HUD-style corner marks. The educational content — theory panels, sliders, scenario buttons, glossary — is unchanged underneath; the C2 chrome is just a frame that makes the simulations feel like an operator's screen rather than a textbook demo.
+
 ## Pedagogical approach
 
 The simulations are not demos — they are diagnostic tools. Each module asks you to predict what will happen before you press the button, then shows you whether you were right. Failure scenarios are first-class: the goal is to develop the engineering intuition for what breaks, not just admire what works.

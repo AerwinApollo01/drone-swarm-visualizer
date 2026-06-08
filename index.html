@@ -1188,6 +1188,103 @@
     }
     .decision-clock.warn .clock-value  { color: var(--yellow); }
     .decision-clock.crit .clock-value  { color: var(--red); }
+
+    /* ============================================================
+       C2 CHROME — operational command-and-control aesthetic
+    ============================================================ */
+    .c2-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 16px;
+      margin-bottom: 14px;
+      background: linear-gradient(180deg, rgba(126,184,247,0.06) 0%, rgba(126,184,247,0.02) 100%);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--blue);
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+      flex-wrap: wrap;
+    }
+    .c2-header .c2-block {
+      display: flex; align-items: center; gap: 6px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .c2-header .c2-value {
+      color: var(--text);
+      font-weight: bold;
+      letter-spacing: 0.06em;
+    }
+    .c2-header .c2-id {
+      color: var(--blue);
+      font-weight: bold;
+      font-size: 11px;
+      letter-spacing: 0.10em;
+    }
+    .c2-led {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 4px currentColor;
+      animation: c2-pulse 2s ease-in-out infinite;
+    }
+    .c2-led.green  { background: var(--green); color: var(--green); }
+    .c2-led.yellow { background: var(--yellow); color: var(--yellow); }
+    .c2-led.red    { background: var(--red); color: var(--red); }
+    @keyframes c2-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.45; }
+    }
+    .c2-clock {
+      font-variant-numeric: tabular-nums;
+      color: var(--green);
+      font-weight: bold;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+    }
+
+    /* Canvas corner brackets — bolt-on without editing canvas markup */
+    .arch-canvas-wrap,
+    .mod2-canvas-wrap,
+    .mod3-canvas-wrap,
+    .cuas1-canvas-wrap,
+    .cuas2-canvas-wrap,
+    .cuas3-canvas-wrap {
+      position: relative;
+    }
+    .arch-canvas-wrap::before,
+    .arch-canvas-wrap::after,
+    .mod2-canvas-wrap::before,
+    .mod2-canvas-wrap::after,
+    .mod3-canvas-wrap::before,
+    .mod3-canvas-wrap::after {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      border-color: var(--blue);
+      border-style: solid;
+      pointer-events: none;
+      opacity: 0.55;
+    }
+    .arch-canvas-wrap::before,
+    .mod2-canvas-wrap::before,
+    .mod3-canvas-wrap::before {
+      top: 2px; left: 2px;
+      border-width: 2px 0 0 2px;
+    }
+    .arch-canvas-wrap::after,
+    .mod2-canvas-wrap::after,
+    .mod3-canvas-wrap::after {
+      bottom: 2px; right: 2px;
+      border-width: 0 2px 2px 0;
+    }
     .gloss-card {
       background: var(--bg-panel);
       border: 1px solid var(--border);
@@ -1441,6 +1538,14 @@
 <!-- MODULE 1 -->
 <div id="tab-mod1" class="tab-pane active">
 
+  <div class="c2-header">
+    <div class="c2-block"><span class="c2-id">OP-M1 // ARCHITECTURE</span></div>
+    <div class="c2-block"><span class="c2-led green"></span><span class="c2-value">NOMINAL</span></div>
+    <div class="c2-block">ASSET <span class="c2-value">SWARM ALPHA</span></div>
+    <div class="c2-block">MODE <span class="c2-value">COMPARATIVE</span></div>
+    <div class="c2-block">T+ <span class="c2-clock mission-clock">00:00:00</span></div>
+  </div>
+
   <details class="theory-panel">
     <summary>Core Theory</summary>
     <div class="theory-body">
@@ -1522,6 +1627,14 @@
 
 <!-- MODULE 2 -->
 <div id="tab-mod2" class="tab-pane">
+
+  <div class="c2-header">
+    <div class="c2-block"><span class="c2-id">OP-M2 // FLOCKING DOCTRINE</span></div>
+    <div class="c2-block"><span class="c2-led green"></span><span class="c2-value">NOMINAL</span></div>
+    <div class="c2-block">RULESET <span class="c2-value">REYNOLDS-1987</span></div>
+    <div class="c2-block">SENSE <span class="c2-value" id="m2-mode-readout">METRIC</span></div>
+    <div class="c2-block">T+ <span class="c2-clock mission-clock">00:00:00</span></div>
+  </div>
 
   <details class="theory-panel">
     <summary>Boids Algorithm — Reynolds 1987</summary>
@@ -1647,6 +1760,14 @@
 <!-- MODULE 3 -->
 <div id="tab-mod3" class="tab-pane">
 
+  <div class="c2-header">
+    <div class="c2-block"><span class="c2-id">OP-M3 // COMMS &amp; GOSSIP</span></div>
+    <div class="c2-block"><span class="c2-led green"></span><span class="c2-value">NOMINAL</span></div>
+    <div class="c2-block">MESH <span class="c2-value">ACTIVE</span></div>
+    <div class="c2-block">PROTOCOL <span class="c2-value">EPIDEMIC-K3</span></div>
+    <div class="c2-block">T+ <span class="c2-clock mission-clock">00:00:00</span></div>
+  </div>
+
   <details class="theory-panel">
     <summary>Mesh Networks &amp; Gossip Protocol</summary>
     <div class="theory-body">
@@ -1736,6 +1857,14 @@
 
 <!-- MODULE 4 -->
 <div id="tab-mod4" class="tab-pane">
+
+  <div class="c2-header">
+    <div class="c2-block"><span class="c2-id">OP-M4 // NAVIGATION</span></div>
+    <div class="c2-block"><span class="c2-led green"></span><span class="c2-value">NOMINAL</span></div>
+    <div class="c2-block">AO <span class="c2-value" id="m4-ao-readout">UNDEFINED</span></div>
+    <div class="c2-block">LAYERS <span class="c2-value">REACTIVE/SLAM/PLAN</span></div>
+    <div class="c2-block">T+ <span class="c2-clock mission-clock">00:00:00</span></div>
+  </div>
 
   <details class="theory-panel">
     <summary>Path Planning &amp; Obstacle Avoidance</summary>
@@ -5555,6 +5684,58 @@ const C3 = (() => {
   }
 
   return { init };
+})();
+
+/* ============================================================
+   C2 MISSION CLOCK — global T+ timer in every module header
+   ============================================================ */
+(function missionClock() {
+  const start = Date.now();
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function tick() {
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    const h = Math.floor(elapsed / 3600);
+    const m = Math.floor((elapsed % 3600) / 60);
+    const s = elapsed % 60;
+    const txt = pad(h) + ':' + pad(m) + ':' + pad(s);
+    document.querySelectorAll('.mission-clock').forEach(el => el.textContent = txt);
+  }
+  setInterval(tick, 1000);
+  tick();
+
+  // Wire M2 sense-mode readout to the neighbor mode toggle if it exists
+  const m2btn = document.getElementById('b-neighbor-mode');
+  const m2readout = document.getElementById('m2-mode-readout');
+  if (m2btn && m2readout) {
+    const sync = () => {
+      const t = m2btn.textContent || '';
+      m2readout.textContent = t.toUpperCase().includes('TOPO') ? 'TOPOLOGICAL' : 'METRIC';
+    };
+    m2btn.addEventListener('click', () => setTimeout(sync, 50));
+    sync();
+  }
+
+  // Wire M4 AO readout to scenario buttons
+  const m4readout = document.getElementById('m4-ao-readout');
+  if (m4readout) {
+    const aoLabels = {
+      basic: 'OPEN GRID', multi: 'MULTI-AGENT', dynamic: 'DYNAMIC OBSTACLES',
+      coverage: 'FOG-OF-WAR', stigmergy: 'PHEROMONE TRAIL'
+    };
+    document.querySelectorAll('.m4-scene-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const k = btn.dataset.scene;
+        if (aoLabels[k]) m4readout.textContent = aoLabels[k];
+      });
+    });
+    // initial
+    const activeBtn = document.querySelector('.m4-scene-btn.active');
+    if (activeBtn && aoLabels[activeBtn.dataset.scene]) {
+      m4readout.textContent = aoLabels[activeBtn.dataset.scene];
+    } else {
+      m4readout.textContent = aoLabels.basic;
+    }
+  }
 })();
 
 /* ============================================================
