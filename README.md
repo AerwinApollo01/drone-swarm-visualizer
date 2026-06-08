@@ -39,7 +39,11 @@ Then open the URL printed in the terminal.
 
 ## Visual style
 
-Modules are framed as a **command-and-control (C2) operations display**: each Swarm Intelligence module opens with an operational header strip (module designation, system LED, asset/mode/protocol callouts, and a live mission elapsed timer `T+ HH:MM:SS`), and canvases are bracketed in HUD-style corner marks. The educational content — theory panels, sliders, scenario buttons, glossary — is unchanged underneath; the C2 chrome is just a frame that makes the simulations feel like an operator's screen rather than a textbook demo.
+Every module is framed as a **command-and-control (C2) operations display**. Each tab opens with an operational header strip (module designation, system LED, contextual callouts, and a live mission elapsed timer `T+ HH:MM:SS` synchronized across the whole site), and canvases are bracketed in HUD-style corner marks.
+
+The C-UAS module headers live-update from the simulation state — the LED turns yellow during engagements, red on breach or authority failure, and the readouts show current sensor count, threat profile, ROE stage, and authority role as the user interacts. Swarm Intelligence headers do the same for swarm mode, area of operations, and protocol.
+
+The educational content — theory panels, sliders, scenario buttons, glossary — is unchanged underneath; the C2 chrome is just a frame that makes the simulations feel like an operator's screen rather than a textbook demo.
 
 ## Pedagogical approach
 

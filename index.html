@@ -1264,7 +1264,13 @@
     .mod2-canvas-wrap::before,
     .mod2-canvas-wrap::after,
     .mod3-canvas-wrap::before,
-    .mod3-canvas-wrap::after {
+    .mod3-canvas-wrap::after,
+    .cuas1-canvas-wrap::before,
+    .cuas1-canvas-wrap::after,
+    .cuas2-canvas-wrap::before,
+    .cuas2-canvas-wrap::after,
+    .cuas3-canvas-wrap::before,
+    .cuas3-canvas-wrap::after {
       content: '';
       position: absolute;
       width: 14px; height: 14px;
@@ -1275,13 +1281,19 @@
     }
     .arch-canvas-wrap::before,
     .mod2-canvas-wrap::before,
-    .mod3-canvas-wrap::before {
+    .mod3-canvas-wrap::before,
+    .cuas1-canvas-wrap::before,
+    .cuas2-canvas-wrap::before,
+    .cuas3-canvas-wrap::before {
       top: 2px; left: 2px;
       border-width: 2px 0 0 2px;
     }
     .arch-canvas-wrap::after,
     .mod2-canvas-wrap::after,
-    .mod3-canvas-wrap::after {
+    .mod3-canvas-wrap::after,
+    .cuas1-canvas-wrap::after,
+    .cuas2-canvas-wrap::after,
+    .cuas3-canvas-wrap::after {
       bottom: 2px; right: 2px;
       border-width: 0 2px 2px 0;
     }
@@ -1972,6 +1984,14 @@
 <!-- C-UAS MODULE 1 — KILL CHAIN -->
 <div id="tab-cuas1" class="tab-pane active">
 
+  <div class="c2-header">
+    <div class="c2-block"><span class="c2-id">OP-C1 // KILL CHAIN</span></div>
+    <div class="c2-block"><span class="c2-led green" id="c1-c2-led"></span><span class="c2-value" id="c1-c2-state">READY</span></div>
+    <div class="c2-block">ZONE <span class="c2-value">ALPHA-7</span></div>
+    <div class="c2-block">LAYERS <span class="c2-value" id="c1-c2-layers">4/4</span></div>
+    <div class="c2-block">T+ <span class="c2-clock mission-clock">00:00:00</span></div>
+  </div>
+
   <details class="theory-panel">
     <summary>Core Theory — The Kill Chain</summary>
     <div class="theory-body">
@@ -2063,6 +2083,14 @@
 
 <!-- C-UAS MODULE 2 — DETECTION & TRACKING -->
 <div id="tab-cuas2" class="tab-pane">
+
+  <div class="c2-header">
+    <div class="c2-block"><span class="c2-id">OP-C2 // SENSOR FUSION</span></div>
+    <div class="c2-block"><span class="c2-led green" id="c2-c2-led"></span><span class="c2-value" id="c2-c2-state">STANDBY</span></div>
+    <div class="c2-block">PROFILE <span class="c2-value" id="c2-c2-profile">CONSUMER</span></div>
+    <div class="c2-block">SENSORS <span class="c2-value" id="c2-c2-sensors">4/4</span></div>
+    <div class="c2-block">T+ <span class="c2-clock mission-clock">00:00:00</span></div>
+  </div>
 
   <details class="theory-panel">
     <summary>Core Theory &mdash; Why Drones Are Hard to Detect</summary>
@@ -2195,6 +2223,14 @@
 
 <!-- C-UAS MODULE 3 — IDENTIFICATION & DECISION -->
 <div id="tab-cuas3" class="tab-pane">
+
+  <div class="c2-header">
+    <div class="c2-block"><span class="c2-id">OP-C3 // DECISION AUTHORITY</span></div>
+    <div class="c2-block"><span class="c2-led green" id="c3-c2-led"></span><span class="c2-value" id="c3-c2-state">STANDBY</span></div>
+    <div class="c2-block">AUTH <span class="c2-value" id="c3-c2-auth">DoD</span></div>
+    <div class="c2-block">ROE <span class="c2-value" id="c3-c2-roe">OBSERVE</span></div>
+    <div class="c2-block">T+ <span class="c2-clock mission-clock">00:00:00</span></div>
+  </div>
 
   <details class="theory-panel">
     <summary>Core Theory &mdash; Where Law Eats Engineering</summary>
@@ -5728,7 +5764,6 @@ const C3 = (() => {
         if (aoLabels[k]) m4readout.textContent = aoLabels[k];
       });
     });
-    // initial
     const activeBtn = document.querySelector('.m4-scene-btn.active');
     if (activeBtn && aoLabels[activeBtn.dataset.scene]) {
       m4readout.textContent = aoLabels[activeBtn.dataset.scene];
@@ -5736,6 +5771,111 @@ const C3 = (() => {
       m4readout.textContent = aoLabels.basic;
     }
   }
+
+  // ---- C-UAS 1 live header: layer count + posture ----
+  function syncC1() {
+    const ledEl = document.getElementById('c1-c2-led');
+    const stateEl = document.getElementById('c1-c2-state');
+    const layersEl = document.getElementById('c1-c2-layers');
+    if (!ledEl || !stateEl || !layersEl) return;
+    let on = 0;
+    for (let i = 0; i < 4; i++) {
+      const t = document.getElementById('c1-layer-' + i);
+      if (t && !t.classList.contains('off')) on++;
+    }
+    layersEl.textContent = on + '/4';
+
+    // Read the outcome banner to set posture
+    const ob = document.getElementById('c1-outcome');
+    const txt = (ob?.textContent || '').toUpperCase();
+    if (txt.includes('DEFENDED'))      { stateEl.textContent = 'DEFENDED';  setLed(ledEl, 'green'); }
+    else if (txt.includes('IMPACT'))   { stateEl.textContent = 'BREACH';    setLed(ledEl, 'red'); }
+    else if (txt.includes('STAGE'))    { stateEl.textContent = 'ENGAGED';   setLed(ledEl, 'yellow'); }
+    else if (txt.includes('TRACKING')) { stateEl.textContent = 'TRACKING';  setLed(ledEl, 'yellow'); }
+    else                                { stateEl.textContent = 'READY';     setLed(ledEl, 'green'); }
+  }
+
+  // ---- C-UAS 2 live header: sensor count + profile + posture ----
+  function syncC2() {
+    const ledEl = document.getElementById('c2-c2-led');
+    const stateEl = document.getElementById('c2-c2-state');
+    const profileEl = document.getElementById('c2-c2-profile');
+    const sensorsEl = document.getElementById('c2-c2-sensors');
+    if (!ledEl || !stateEl) return;
+
+    // Sensor count
+    let on = 0;
+    ['radar','rf','acoustic','eoir'].forEach(id => {
+      const t = document.getElementById('c2-sensor-' + id);
+      if (t && !t.classList.contains('off')) on++;
+    });
+    if (sensorsEl) sensorsEl.textContent = on + '/4';
+
+    // Active profile
+    const activeProfile = document.querySelector('.profile-btn.active');
+    if (profileEl && activeProfile) {
+      profileEl.textContent = (activeProfile.dataset.profile || 'CONSUMER').toUpperCase();
+    }
+
+    // State from outcome
+    const ob = document.getElementById('c2-outcome');
+    const txt = (ob?.textContent || '').toUpperCase();
+    if (txt.includes('DETECTED'))      { stateEl.textContent = 'DETECTED';  setLed(ledEl, 'green'); }
+    else if (txt.includes('MISSED'))   { stateEl.textContent = 'MISSED';    setLed(ledEl, 'red'); }
+    else if (txt.includes('TRACKING')) { stateEl.textContent = 'TRACKING';  setLed(ledEl, 'yellow'); }
+    else if (txt.includes('INBOUND'))  { stateEl.textContent = 'INBOUND';   setLed(ledEl, 'yellow'); }
+    else                                { stateEl.textContent = 'STANDBY';   setLed(ledEl, 'green'); }
+  }
+
+  // ---- C-UAS 3 live header: authority + ROE stage + posture ----
+  function syncC3() {
+    const ledEl = document.getElementById('c3-c2-led');
+    const stateEl = document.getElementById('c3-c2-state');
+    const authEl = document.getElementById('c3-c2-auth');
+    const roeEl = document.getElementById('c3-c2-roe');
+    if (!ledEl || !stateEl) return;
+
+    // Authority from active scenario badge
+    const authBadge = document.getElementById('c3-authority');
+    if (authEl && authBadge) {
+      const t = authBadge.textContent || '';
+      if (t.includes('DoD')) authEl.textContent = 'DoD';
+      else if (t.includes('Airport')) authEl.textContent = 'AIRPORT';
+      else authEl.textContent = 'LIMITED';
+    }
+
+    // Current ROE stage from the latest .done button
+    if (roeEl) {
+      const stages = ['observe','warn','nonkinetic','kinetic'];
+      let latest = 'OBSERVE';
+      stages.forEach(s => {
+        const btn = document.getElementById('c3-roe-' + s);
+        if (btn && btn.classList.contains('done')) latest = s.toUpperCase();
+      });
+      roeEl.textContent = latest;
+    }
+
+    // State from outcome
+    const ob = document.getElementById('c3-outcome');
+    const txt = (ob?.textContent || '').toUpperCase();
+    if (txt.includes('DEFENDED'))       { stateEl.textContent = 'DEFENDED';       setLed(ledEl, 'green'); }
+    else if (txt.includes('NO HARM'))   { stateEl.textContent = 'CORRECT-HOLD';   setLed(ledEl, 'green'); }
+    else if (txt.includes('FALSE'))     { stateEl.textContent = 'FALSE-POSITIVE'; setLed(ledEl, 'yellow'); }
+    else if (txt.includes('IMPACT'))    { stateEl.textContent = 'BREACH';         setLed(ledEl, 'red'); }
+    else if (txt.includes('AUTHORITY')) { stateEl.textContent = 'AUTH-FAIL';      setLed(ledEl, 'red'); }
+    else if (txt.includes('APPROVING')) { stateEl.textContent = 'APPROVING';      setLed(ledEl, 'yellow'); }
+    else if (txt.includes('STAGE'))     { stateEl.textContent = 'ENGAGED';        setLed(ledEl, 'yellow'); }
+    else                                  { stateEl.textContent = 'STANDBY';        setLed(ledEl, 'green'); }
+  }
+
+  function setLed(el, color) {
+    el.classList.remove('green','yellow','red');
+    el.classList.add(color);
+  }
+
+  // Poll all C-UAS headers 4×/sec — cheap, decoupled from sim internals
+  setInterval(() => { syncC1(); syncC2(); syncC3(); }, 250);
+  syncC1(); syncC2(); syncC3();
 })();
 
 /* ============================================================
